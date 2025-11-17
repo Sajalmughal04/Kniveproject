@@ -23,7 +23,7 @@ const RegisterPage = lazy(() => import("./Knive/RegisterPage.jsx"));
 const ProfilePage = lazy(() => import("./Knive/ProfilePage.jsx"));
 const AboutPage = lazy(() => import("./Knive/AboutPage.jsx"));
 const ContactPage = lazy(() => import("./Knive/ContactPage.jsx"));
-const FAQs = lazy(() => import("./Knive/FAQs.jsx"));
+const FAQs = lazy(() => import("./Knive/FAQS.jsx"));
 const Wishlist = lazy(() => import("./Knive/WishList.jsx"));
 const OrderTrackingPage = lazy(() => import("./Knive/OrderTrackingPage.jsx"));
 const ReviewPage = lazy(() => import("./Knive/ReviewPage.jsx"));
