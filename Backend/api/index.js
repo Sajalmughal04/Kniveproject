@@ -4,14 +4,14 @@ import mongoose from "mongoose";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
-import Admin from "./models/Admin.js";
-import productRoutes from "./routes/productRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
-import authRoutes from "./routes/authRoutes.js";
-import contactRoutes from "./routes/contactRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
-import categoryRoutes from "./routes/categoryRoutes.js";
+import Admin from "../models/Admin.js";
+import productRoutes from "../routes/productRoutes.js";
+import adminRoutes from "../routes/adminRoutes.js";
+import orderRoutes from "../routes/orderRoutes.js";
+import authRoutes from "../routes/authRoutes.js";
+import contactRoutes from "../routes/contactRoutes.js";
+import paymentRoutes from "../routes/paymentRoutes.js";
+import categoryRoutes from "../routes/categoryRoutes.js";
 
 // Load environment variables
 dotenv.config();
