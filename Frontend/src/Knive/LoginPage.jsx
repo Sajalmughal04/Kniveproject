@@ -1,24 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { loginStart, loginSuccess, loginFailure, clearError } from "../Redux/slice/authSlice.js";
 
 const API_URL = "http://localhost:3000/api/auth";
 
-const LoginPage = ({ setUser }) => {
+const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  
+  // ✅ Get loading and error from Redux
+  const { loading, error } = useSelector((state) => state.auth);
   
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   // Get the page user was trying to access (default to /shop which is homepage)
   const from = location.state?.from || '/shop';
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const handleChange = (e) => {
     setFormData({
@@ -26,20 +37,19 @@ const LoginPage = ({ setUser }) => {
       [e.target.name]: e.target.value,
     });
     // Clear error when user starts typing
-    if (error) setError("");
+    if (error) dispatch(clearError());
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
 
     // Validation
     if (!formData.email || !formData.password) {
-      setError("Please enter both email and password");
+      dispatch(loginFailure("Please enter both email and password"));
       return;
     }
 
-    setLoading(true);
+    dispatch(loginStart());
 
     try {
       console.log('🔐 Sending login request...');
@@ -63,17 +73,10 @@ const LoginPage = ({ setUser }) => {
           bio: response.data.data.bio || '',
         };
 
-        // ✅ Save to localStorage (This creates the profile)
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(userData));
+        // ✅ Dispatch Redux action (automatically saves to localStorage)
+        dispatch(loginSuccess({ user: userData, token }));
         
-        console.log('💾 Profile created and saved to localStorage:', userData);
-
-        // ✅ Update parent state (This makes user available globally)
-        if (setUser && typeof setUser === 'function') {
-          setUser(userData);
-          console.log('✅ User state updated - Profile is now active');
-        }
+        console.log('💾 Profile created and saved via Redux:', userData);
         
         // Show success message with toast
         toast.success(`Welcome back, ${userData.name}! 🎉`, {
@@ -92,25 +95,24 @@ const LoginPage = ({ setUser }) => {
         console.log('🏠 Redirecting to homepage: /shop');
         navigate('/shop', { replace: true });
       } else {
-        setError("Login failed. Please try again.");
+        dispatch(loginFailure("Login failed. Please try again."));
       }
     } catch (err) {
       console.error('❌ Login error:', err);
       console.error('Error response:', err.response?.data);
       
       // Handle different error types
+      let errorMessage = "An error occurred. Please try again.";
+      
       if (err.response) {
         // Server responded with error
-        setError(err.response.data?.message || "Invalid email or password");
+        errorMessage = err.response.data?.message || "Invalid email or password";
       } else if (err.request) {
         // Request made but no response
-        setError("Cannot connect to server. Please check if backend is running.");
-      } else {
-        // Something else happened
-        setError("An error occurred. Please try again.");
+        errorMessage = "Cannot connect to server. Please check if backend is running.";
       }
-    } finally {
-      setLoading(false);
+      
+      dispatch(loginFailure(errorMessage));
     }
   };
 
@@ -139,7 +141,7 @@ const LoginPage = ({ setUser }) => {
               <span className="block sm:inline">{error}</span>
               <button
                 type="button"
-                onClick={() => setError("")}
+                onClick={() => dispatch(clearError())}
                 className="absolute top-0 bottom-0 right-0 px-4 py-3"
               >
                 <span className="text-2xl">&times;</span>

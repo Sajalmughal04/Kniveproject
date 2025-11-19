@@ -1,9 +1,8 @@
+// api/index.js
 import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
 import Admin from "../models/Admin.js";
 import productRoutes from "../routes/productRoutes.js";
 import adminRoutes from "../routes/adminRoutes.js";
@@ -17,49 +16,8 @@ import categoryRoutes from "../routes/categoryRoutes.js";
 dotenv.config();
 
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
-// CORS Configuration - Production URLs add karein
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL || "https://your-frontend.vercel.app"]
-    : ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
-
-// ✅ FIX: Webhook route with raw body parser (BODY PARSER SE PEHLE)
-app.post("/api/payment/webhook", 
-  express.raw({ type: "application/json" }), 
-  (req, res, next) => {
-    req.url = '/webhook';
-    paymentRoutes(req, res, next);
-  }
-);
-
-// Body Parser Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Request Logger Middleware (Only in Development)
-if (process.env.NODE_ENV === 'development') {
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`, {
-      body: req.body,
-      headers: req.headers.authorization ? 'Token present' : 'No token'
-    });
-    next();
-  });
-}
-
-// Static Files for Uploads (only in development)
-if (process.env.USE_LOCAL_STORAGE === "true" && process.env.NODE_ENV !== 'production') {
-  app.use("/uploads", express.static(path.join(__dirname, process.env.UPLOADS_DIR || "uploads")));
-}
-
-// MongoDB Connection Handler for Serverless
+// MongoDB Connection with Caching
 let cachedDb = null;
 
 const connectDB = async () => {
@@ -77,7 +35,7 @@ const connectDB = async () => {
     cachedDb = db;
     console.log("✅ MongoDB connected");
     
-    // Create default admin only once
+    // Create default admin
     await createDefaultAdmin();
     
     return db;
@@ -87,7 +45,6 @@ const connectDB = async () => {
   }
 };
 
-// Create Default Admin
 const createDefaultAdmin = async () => {
   try {
     const adminEmail = process.env.ADMIN_EMAIL || "admin@knives.com";
@@ -95,39 +52,46 @@ const createDefaultAdmin = async () => {
     const existingAdmin = await Admin.findOne({ email: adminEmail });
     
     if (!existingAdmin) {
-      console.log("📝 Creating default admin...");
-      const admin = await Admin.create({ 
+      await Admin.create({ 
         name: "Default Admin", 
         email: adminEmail, 
         password: adminPassword 
       });
-      console.log("✅ Default admin created:", admin.email);
+      console.log("✅ Default admin created");
     }
   } catch (error) {
     console.error("❌ Error creating default admin:", error.message);
   }
 };
 
-// Helper function to log endpoints (only in development)
-const logEndpoints = () => {
-  if (process.env.NODE_ENV === 'development' && process.env.SHOW_ENDPOINTS === 'true') {
-    console.log(`\n📦 Available Endpoints:`);
-    console.log(`   - Products: /api/products`);
-    console.log(`   - Categories: /api/categories`);
-    console.log(`   - Admin: /api/admin`);
-    console.log(`   - Orders: /api/orders`);
-    console.log(`   - Auth: /api/auth`);
-    console.log(`   - Contact: /api/contact`);
-    console.log(`   - Payment: /api/payment\n`);
+// CORS Configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL, "https://kniveproject-yo2q.vercel.app"]
+    : ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+// Webhook route with raw body (BEFORE body parser)
+app.post("/api/payment/webhook", 
+  express.raw({ type: "application/json" }), 
+  (req, res, next) => {
+    req.url = '/webhook';
+    paymentRoutes(req, res, next);
   }
-};
+);
+
+// Body Parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Root Route
 app.get("/", (req, res) => {
   res.json({ 
-    message: "🚀 Server is running!", 
+    message: "🚀 Knife Store API is running!", 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
     endpoints: { 
       products: "/api/products",
       categories: "/api/categories",
@@ -140,7 +104,14 @@ app.get("/", (req, res) => {
   });
 });
 
-// Health check route
+app.get("/api", (req, res) => {
+  res.json({ 
+    message: "🚀 API is working!", 
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Health check
 app.get("/api/health", (req, res) => {
   res.json({ 
     status: "ok", 
@@ -149,7 +120,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ✅ API Routes
+// API Routes
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
@@ -166,43 +137,25 @@ app.use((req, res) => {
   });
 });
 
-// Global Error Handler
+// Error Handler
 app.use((err, req, res, next) => {
-  console.error("❌ Error:", err.stack);
+  console.error("❌ Error:", err);
   res.status(err.status || 500).json({ 
     success: false, 
     message: err.message || "Internal Server Error" 
   });
 });
 
-// ✅ For Local Development
-if (process.env.NODE_ENV !== 'production') {
-  connectDB().then(() => {
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`\n🚀 Server running on http://localhost:${PORT}\n`);
-      logEndpoints();
-    });
-  }).catch((err) => {
-    console.error("❌ Failed to start server:", err);
-    process.exit(1);
-  });
-}
-
-// ✅ Serverless Handler for Vercel (UPDATED)
+// Serverless Handler for Vercel
 export default async function handler(req, res) {
   try {
-    // Connect to MongoDB
     await connectDB();
-    
-    // Pass request to Express app
     return app(req, res);
   } catch (error) {
     console.error("❌ Handler error:", error);
     return res.status(500).json({ 
       success: false, 
-      message: "Server initialization failed",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: "Server initialization failed"
     });
   }
 }

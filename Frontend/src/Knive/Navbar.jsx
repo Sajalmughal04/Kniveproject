@@ -14,13 +14,19 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux"; // ✅ ADDED REDUX
+import { logout } from "../Redux/slice/authSlice"; // ✅ IMPORT LOGOUT ACTION
 import { useCart } from "./CartContext";
-import { useWishlist } from "./WishlistContext"; // ✅ ADDED
+import { useWishlist } from "./WishlistContext";
 
-const Navbar = ({ setSearchTerm, theme, toggleTheme, user, setUser }) => {
+const Navbar = ({ setSearchTerm, theme, toggleTheme }) => { // ✅ REMOVED user, setUser props
   const { cart } = useCart();
-  const { wishlistCount } = useWishlist(); // ✅ USE CONTEXT INSTEAD OF LOCAL STATE
+  const { wishlistCount } = useWishlist();
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+
+  // ✅ GET USER FROM REDUX INSTEAD OF PROPS
+  const dispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const [open, setOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -80,10 +86,9 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme, user, setUser }) => {
     if (location.pathname !== "/shop") navigate("/shop");
   };
 
+  // ✅ FIXED LOGOUT - NOW USES REDUX
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+    dispatch(logout()); // ✅ This will clear Redux state AND localStorage
     setShowUserMenu(false);
     setOpen(false);
     navigate('/');
@@ -95,9 +100,6 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme, user, setUser }) => {
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
-
-  // ✅ Debug log - Remove after testing
-  console.log("🎯 Navbar - Wishlist Count:", wishlistCount);
 
   return (
     <nav
@@ -150,7 +152,7 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme, user, setUser }) => {
 
           {/* Icons */}
           <li className="flex items-center space-x-3 ml-4">
-            {/* ❤️ Wishlist - FIXED */}
+            {/* ❤️ Wishlist */}
             <button
               onClick={() => navigate("/wishlist")}
               className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group"
@@ -178,8 +180,8 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme, user, setUser }) => {
               )}
             </button>
 
-            {/* 👤 User Profile / Login */}
-            {user ? (
+            {/* 👤 User Profile / Login - ✅ FIXED */}
+            {isAuthenticated && user ? (
               <div className="relative user-menu-container">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -352,8 +354,8 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme, user, setUser }) => {
                 </Link>
               ))}
 
-              {/* Mobile User Section */}
-              {user ? (
+              {/* Mobile User Section - ✅ FIXED */}
+              {isAuthenticated && user ? (
                 <>
                   <div className="flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg">
                     <div className={`flex items-center justify-center w-12 h-12 rounded-full ${getAvatarColor(user.name)} text-white font-bold text-lg`}>

@@ -1,6 +1,8 @@
-// src/App.jsx - HOME PAGE ACCESSIBLE + LOGIN FOR PROTECTED ROUTES
+// src/App.jsx - WITH REDUX INTEGRATION
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { Provider, useSelector } from "react-redux";
+import { store } from "./redux/store";
 import Navbar from "./Knive/Navbar";
 import Footer from "./Knive/Footer";
 import WhatsAppButton from "./Knive/WhatsappButton";
@@ -57,11 +59,12 @@ function ScrollToTop() {
   return null;
 }
 
-// ✅ Protected User Route
-function ProtectedRoute({ children, user }) {
+// ✅ Protected User Route - NOW USING REDUX
+function ProtectedRoute({ children }) {
   const location = useLocation();
+  const { isAuthenticated } = useSelector((state) => state.auth);
   
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
   
@@ -129,10 +132,13 @@ function AdminProtectedRoute({ children }) {
   return children;
 }
 
-// ✅ User Layout
-function UserLayout({ user, setUser }) {
+// ✅ User Layout - NOW USING REDUX
+function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
+  
+  // Get user from Redux instead of props
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -149,8 +155,6 @@ function UserLayout({ user, setUser }) {
         setSearchTerm={setSearchTerm} 
         theme={theme} 
         toggleTheme={toggleTheme} 
-        user={user} 
-        setUser={setUser} 
       />
       <ScrollToTop />
 
@@ -171,7 +175,7 @@ function UserLayout({ user, setUser }) {
             <Route path="/product/:id/review" element={<ReviewPage />} />
             
             {/* Cart & Wishlist */}
-            <Route path="/cart" element={<CartPage user={user} />} />
+            <Route path="/cart" element={<CartPage />} />
             <Route path="/wishlist" element={<Wishlist />} />
             
             {/* Info Pages */}
@@ -184,20 +188,20 @@ function UserLayout({ user, setUser }) {
             <Route 
               path="/login" 
               element={
-                user ? (
+                isAuthenticated ? (
                   <Navigate to="/" replace />
                 ) : (
-                  <LoginPage setUser={setUser} />
+                  <LoginPage />
                 )
               } 
             />
             <Route 
               path="/register" 
               element={
-                user ? (
+                isAuthenticated ? (
                   <Navigate to="/" replace />
                 ) : (
-                  <RegisterPage setUser={setUser} />
+                  <RegisterPage />
                 )
               } 
             />
@@ -209,16 +213,16 @@ function UserLayout({ user, setUser }) {
             <Route 
               path="/checkout" 
               element={
-                <ProtectedRoute user={user}>
-                  <CheckoutPage user={user} />
+                <ProtectedRoute>
+                  <CheckoutPage />
                 </ProtectedRoute>
               } 
             />
             <Route 
               path="/profile" 
               element={
-                <ProtectedRoute user={user}>
-                  <ProfilePage user={user} setUser={setUser} />
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               } 
             />
@@ -267,72 +271,36 @@ function NotFound() {
   );
 }
 
-// ✅ Main App
+// ✅ Main App - WITH REDUX PROVIDER
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadUser = () => {
-      try {
-        const storedUser = localStorage.getItem("user");
-        const token = localStorage.getItem("token");
-        
-        if (storedUser && token) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-        }
-      } catch (error) {
-        console.error("Error loading user:", error);
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUser();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300 font-semibold text-lg">
-            Loading Application...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <Router>
-      <Routes>
-        {/* Admin Routes */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route 
-          path="/admin/*" 
-          element={
-            <AdminProtectedRoute>
-              <AdminPanel />
-            </AdminProtectedRoute>
-          } 
-        />
+    <Provider store={store}>
+      <Router>
+        <Routes>
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route 
+            path="/admin/*" 
+            element={
+              <AdminProtectedRoute>
+                <AdminPanel />
+              </AdminProtectedRoute>
+            } 
+          />
 
-        {/* User Routes - Wrapped in CartProvider & WishlistProvider */}
-        <Route 
-          path="/*" 
-          element={
-            <CartProvider>
-              <WishlistProvider>
-                <UserLayout user={user} setUser={setUser} />
-              </WishlistProvider>
-            </CartProvider>
-          }
-        />
-      </Routes>
-    </Router>
+          {/* User Routes - Wrapped in CartProvider & WishlistProvider */}
+          <Route 
+            path="/*" 
+            element={
+              <CartProvider>
+                <WishlistProvider>
+                  <UserLayout />
+                </WishlistProvider>
+              </CartProvider>
+            }
+          />
+        </Routes>
+      </Router>
+    </Provider>
   );
 }
