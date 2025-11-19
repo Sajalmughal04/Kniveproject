@@ -30,7 +30,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// ✅ FIX: Webhook route with raw body parser (SPECIFIC PATH)
+// ✅ FIX: Webhook route with raw body parser (BODY PARSER SE PEHLE)
 app.post("/api/payment/webhook", 
   express.raw({ type: "application/json" }), 
   (req, res, next) => {
@@ -189,11 +189,20 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// ✅ Serverless Handler for Vercel
-const handler = async (req, res) => {
-  await connectDB();
-  return app(req, res);
-};
-
-// Export for Vercel
-export default handler;
+// ✅ Serverless Handler for Vercel (UPDATED)
+export default async function handler(req, res) {
+  try {
+    // Connect to MongoDB
+    await connectDB();
+    
+    // Pass request to Express app
+    return app(req, res);
+  } catch (error) {
+    console.error("❌ Handler error:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server initialization failed",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+}
