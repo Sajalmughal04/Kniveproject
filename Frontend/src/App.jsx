@@ -1,4 +1,4 @@
-// src/App.jsx - COMPLETE FIXED CODE
+// src/App.jsx - HOME PAGE ACCESSIBLE + LOGIN FOR PROTECTED ROUTES
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./Knive/Navbar";
@@ -157,15 +157,16 @@ function UserLayout({ user, setUser }) {
       <main className="flex-grow pt-20">
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
-            {/* Public Routes */}
+            {/* ✅ HOME PAGE - Always accessible (No login required) */}
             <Route path="/" element={<ShopPage searchTerm={searchTerm} />} />
             <Route path="/shop" element={<ShopPage searchTerm={searchTerm} />} />
+            <Route path="/home" element={<ShopPage searchTerm={searchTerm} />} />
             
             {/* ✅ Category Routes */}
             <Route path="/categories" element={<AllCategoriesPage />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             
-            {/* ✅ Product Routes - No addToCart prop needed */}
+            {/* ✅ Product Routes */}
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/product/:id/review" element={<ReviewPage />} />
             
@@ -179,14 +180,32 @@ function UserLayout({ user, setUser }) {
             <Route path="/faq" element={<FAQs />} />
             <Route path="/track-order" element={<OrderTrackingPage />} />
             
-            {/* Auth Routes */}
-            <Route path="/login" element={<LoginPage setUser={setUser} />} />
-            <Route path="/register" element={<RegisterPage setUser={setUser} />} />
+            {/* Auth Routes - Redirect to home if already logged in */}
+            <Route 
+              path="/login" 
+              element={
+                user ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <LoginPage setUser={setUser} />
+                )
+              } 
+            />
+            <Route 
+              path="/register" 
+              element={
+                user ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <RegisterPage setUser={setUser} />
+                )
+              } 
+            />
             
             {/* Payment Success Route */}
             <Route path="/payment-success" element={<PaymentSuccess />} />
             
-            {/* Protected Routes */}
+            {/* 🔐 Protected Routes - Login required */}
             <Route 
               path="/checkout" 
               element={

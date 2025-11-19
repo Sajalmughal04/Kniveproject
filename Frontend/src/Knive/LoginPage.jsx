@@ -17,8 +17,8 @@ const LoginPage = ({ setUser }) => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Get the page user was trying to access (default to home)
-  const from = location.state?.from || '/';
+  // Get the page user was trying to access (default to /shop which is homepage)
+  const from = location.state?.from || '/shop';
 
   const handleChange = (e) => {
     setFormData({
@@ -88,9 +88,9 @@ const LoginPage = ({ setUser }) => {
         // Clear form
         setFormData({ email: "", password: "" });
         
-        // ✅ Redirect to intended page (checkout, profile, etc) or home
-        console.log('🎯 Redirecting to:', from);
-        navigate(from, { replace: true });
+        // ✅ Always redirect to /shop (homepage) after login
+        console.log('🏠 Redirecting to homepage: /shop');
+        navigate('/shop', { replace: true });
       } else {
         setError("Login failed. Please try again.");
       }
@@ -126,7 +126,7 @@ const LoginPage = ({ setUser }) => {
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
           {/* Show message if redirected from checkout or other protected route */}
-          {from !== '/' && (
+          {from !== '/shop' && (
             <div className="mb-6 p-4 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-600 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-300 text-center font-semibold">
                 🔒 Please login to {from === '/checkout' ? 'proceed with checkout' : 'continue'}
@@ -259,12 +259,9 @@ const LoginPage = ({ setUser }) => {
         </div>
 
         <div className="mt-6 text-center">
-          <Link
-            to="/"
-            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm font-medium"
-          >
-            ← Back to Home
-          </Link>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
+            🔒 Secure Login • Your data is safe with us
+          </p>
         </div>
       </div>
     </div>

@@ -4,14 +4,14 @@ import mongoose from "mongoose";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
-import Admin from "./models/Admin.js";
-import productRoutes from "./routes/productRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
-import authRoutes from "./routes/authRoutes.js";
-import contactRoutes from "./routes/contactRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
-import categoryRoutes from "./routes/categoryRoutes.js"; // ✅ NEW IMPORT
+import Admin from "../Backend/models/Admin.js";
+import productRoutes from "../Backend/routes/productRoutes.js";
+import adminRoutes from "../Backend/routes/adminRoutes.js";
+import orderRoutes from "../Backend/routes/orderRoutes.js";
+import authRoutes from "../Backend/routes/authRoutes.js";
+import contactRoutes from "../Backend/routes/contactRoutes.js";
+import paymentRoutes from "../Backend/routes/paymentRoutes.js";
+import categoryRoutes from "../Backend/routes/categoryRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -22,7 +22,9 @@ const __dirname = path.dirname(__filename);
 
 // CORS Configuration
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL || "https://kniveproject-yo2q.vercel.app/"] 
+    : ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -53,9 +55,10 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
-// Static Files for Uploads
-if (process.env.USE_LOCAL_STORAGE === "true") {
-  app.use("/uploads", express.static(path.join(__dirname, process.env.UPLOADS_DIR || "uploads")));
+// Static Files for Uploads (Local development only)
+// ⚠️ WARNING: Vercel pe files persist nahi hongi, cloud storage use karo
+if (process.env.USE_LOCAL_STORAGE === "true" && process.env.NODE_ENV !== 'production') {
+  app.use("/uploads", express.static(path.join(__dirname, "..", process.env.UPLOADS_DIR || "uploads")));
 }
 
 // Create Default Admin
@@ -88,7 +91,7 @@ const logEndpoints = () => {
   if (process.env.NODE_ENV === 'development' && process.env.SHOW_ENDPOINTS === 'true') {
     console.log(`\n📦 Available Endpoints:`);
     console.log(`   - Products: /api/products`);
-    console.log(`   - Categories: /api/categories`); // ✅ NEW
+    console.log(`   - Categories: /api/categories`);
     console.log(`   - Admin: /api/admin`);
     console.log(`   - Orders: /api/orders`);
     console.log(`   - Auth: /api/auth`);
@@ -102,7 +105,7 @@ const logEndpoints = () => {
     console.log(`   - PUT /api/auth/change-password - Change password (Protected)`);
     console.log(`   - POST /api/auth/logout - Logout user (Protected)`);
     console.log(`   - DELETE /api/auth/delete-account - Delete account (Protected)\n`);
-    console.log(`📂 Category Routes:`); // ✅ NEW
+    console.log(`📂 Category Routes:`);
     console.log(`   - GET /api/categories - Get all categories`);
     console.log(`   - GET /api/categories/:slug - Get category by slug`);
     console.log(`   - POST /api/categories - Create category (Admin)`);
@@ -122,9 +125,10 @@ app.get("/", (req, res) => {
   res.json({ 
     message: "🚀 Server is running!", 
     timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
     endpoints: { 
       products: "/api/products",
-      categories: "/api/categories", // ✅ NEW
+      categories: "/api/categories",
       admin: "/api/admin", 
       orders: "/api/orders",
       auth: "/api/auth",
@@ -136,7 +140,7 @@ app.get("/", (req, res) => {
 
 // ✅ API Routes (Body parser KE BAAD, sahi order mein)
 app.use("/api/products", productRoutes);
-app.use("/api/categories", categoryRoutes); // ✅ NEW ROUTE ADDED
+app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/auth", authRoutes);
@@ -160,21 +164,62 @@ app.use((err, req, res, next) => {
   });
 });
 
-// MongoDB Connection and Server Start
-mongoose.connect(process.env.MONGO_URI)
-  .then(async () => {
+// ✅ MongoDB Connection for Serverless (Connection Pooling)
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) {
+    console.log("✅ Using existing MongoDB connection");
+    return;
+  }
+  
+  try {
+    const options = {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    };
+    
+    await mongoose.connect(process.env.MONGO_URI, options);
+    isConnected = true;
     console.log("✅ MongoDB connected");
+    
+    // Create default admin only once
     await createDefaultAdmin();
     
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`\n🚀 Server running on http://localhost:${PORT}\n`);
-      
-      // Optional: Show endpoints only if enabled in .env
+    // Log endpoints in development
+    if (process.env.NODE_ENV === 'development') {
       logEndpoints();
-    });
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB connection error:", err);
-    process.exit(1);
+    }
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error);
+    isConnected = false;
+    throw error;
+  }
+};
+
+// Handle MongoDB connection for serverless
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ MongoDB disconnected');
+  isConnected = false;
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB error:', err);
+  isConnected = false;
+});
+
+// Connect to database
+connectDB().catch(err => {
+  console.error("Failed to connect to MongoDB:", err);
+});
+
+// ✅ FOR LOCAL DEVELOPMENT: Start server if not in Vercel
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Server running on http://localhost:${PORT}\n`);
   });
+}
+
+// ✅ Export app for Vercel serverless functions
+export default app;
