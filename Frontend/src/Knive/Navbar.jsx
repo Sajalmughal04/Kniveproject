@@ -14,19 +14,21 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useDispatch, useSelector } from "react-redux"; // ✅ ADDED REDUX
-import { logout } from "../Redux/slice/authSlice"; // ✅ IMPORT LOGOUT ACTION
-import { useCart } from "./CartContext";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../Redux/slice/authSlice"; // ✅ Auth Redux
+import { selectCartCount } from "../Redux/slice/cartSlice"; // ✅ Cart Redux
 import { useWishlist } from "./WishlistContext";
 
-const Navbar = ({ setSearchTerm, theme, toggleTheme }) => { // ✅ REMOVED user, setUser props
-  const { cart } = useCart();
+const Navbar = ({ setSearchTerm, theme, toggleTheme }) => {
+  // ✅ GET CART COUNT FROM REDUX
+  const cartCount = useSelector(selectCartCount);
+  
+  // ✅ GET WISHLIST (Still using context for now)
   const { wishlistCount } = useWishlist();
-  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
 
-  // ✅ GET USER FROM REDUX INSTEAD OF PROPS
+  // ✅ GET USER FROM REDUX
   const dispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth || {});
 
   const [open, setOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -86,9 +88,9 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => { // ✅ REMOVED user,
     if (location.pathname !== "/shop") navigate("/shop");
   };
 
-  // ✅ FIXED LOGOUT - NOW USES REDUX
+  // ✅ LOGOUT - USES REDUX
   const handleLogout = () => {
-    dispatch(logout()); // ✅ This will clear Redux state AND localStorage
+    dispatch(logout());
     setShowUserMenu(false);
     setOpen(false);
     navigate('/');
@@ -166,7 +168,7 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => { // ✅ REMOVED user,
               )}
             </button>
 
-            {/* 🛒 Cart */}
+            {/* 🛒 Cart - ✅ NOW USING REDUX */}
             <button
               onClick={() => navigate("/cart")}
               className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group"
@@ -180,7 +182,7 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => { // ✅ REMOVED user,
               )}
             </button>
 
-            {/* 👤 User Profile / Login - ✅ FIXED */}
+            {/* 👤 User Profile / Login */}
             {isAuthenticated && user ? (
               <div className="relative user-menu-container">
                 <button
@@ -354,7 +356,7 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => { // ✅ REMOVED user,
                 </Link>
               ))}
 
-              {/* Mobile User Section - ✅ FIXED */}
+              {/* Mobile User Section */}
               {isAuthenticated && user ? (
                 <>
                   <div className="flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg">

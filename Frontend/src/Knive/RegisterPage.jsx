@@ -239,14 +239,7 @@ const RegisterPage = ({ setUser }) => {
           </p>
         </form>
 
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => navigate("/")}
-            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm font-medium"
-          >
-            ← Back to Home
-          </button>
-        </div>
+        
       </div>
     </div>
   );

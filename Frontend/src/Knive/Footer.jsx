@@ -150,22 +150,7 @@ const Footer = () => {
         </div>
 
         {/* Newsletter Section */}
-        <div className="mt-16 pt-12 border-t border-gray-800">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-2xl font-bold text-white mb-3">Stay Updated</h3>
-            <p className="text-gray-400 mb-6">Subscribe to our newsletter for exclusive deals and updates</p>
-            <div className="flex gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition"
-              />
-              <button className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-semibold rounded-lg transition-all duration-300 hover:scale-105 shadow-lg shadow-yellow-500/20">
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
+        
       </div>
 
       {/* Bottom Bar */}

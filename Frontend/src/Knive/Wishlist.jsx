@@ -1,29 +1,31 @@
 // src/Knive/Wishlist.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "./CartContext";
+import { useDispatch } from "react-redux"; // ✅ Redux
+import { addToCart } from "../Redux/slice/cartSlice"; // ✅ Redux Action
 import { useWishlist } from "./WishlistContext";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 
 const Wishlist = () => {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const dispatch = useDispatch(); // ✅ Redux Dispatch
   const { wishlist, toggleWishlist, clearWishlist } = useWishlist();
 
+  // ✅ Add to Cart - NOW USING REDUX
   const handleAddToCart = (item) => {
     if (item.stock === 0) {
       toast.error("Product out of stock!");
       return;
     }
 
-    addToCart({
+    dispatch(addToCart({
       id: item.id || item._id,
       name: item.name || item.title,
       price: item.price,
       image: item.image,
       quantity: 1
-    });
+    }));
     
     toast.success(`${item.name || item.title} added to cart!`);
   };

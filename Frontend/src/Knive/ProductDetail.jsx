@@ -4,13 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useCart } from "./CartContext";
+import { useDispatch, useSelector } from "react-redux"; // ✅ Redux
+import { addToCart } from "../Redux/slice/cartSlice"; // ✅ Redux Action
 import { useWishlist } from "./WishlistContext";
 
 const API_URL = "http://localhost:3000/api";
 
 const ProductDetail = () => {
-  const { addToCart } = useCart();
+  const dispatch = useDispatch(); // ✅ Redux Dispatch
+  const { user } = useSelector((state) => state.auth || {}); // ✅ Get user from Redux
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,14 +22,6 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [currentImage, setCurrentImage] = useState(0);
   const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
-  
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   // ✅ Fetch product from backend with FULL DEBUGGING
   useEffect(() => {
@@ -127,16 +121,16 @@ const ProductDetail = () => {
     ? product.images.map(img => img.url) 
     : ["data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23f3f4f6' width='400' height='400'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='24' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E"];
 
-  // Add to cart handler
+  // ✅ Add to cart handler - NOW USING REDUX
   const handleAddToCart = () => {
     if (product.stock > 0) {
-      addToCart({ 
+      dispatch(addToCart({ 
         id: product._id,
         name: product.title,
         price: productPrice,
         image: images[0],
         quantity: parseInt(quantity)
-      });
+      }));
       
       toast.success(`${product.title} added to cart!`, {
         position: "top-right",

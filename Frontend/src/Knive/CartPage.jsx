@@ -1,18 +1,28 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useCart } from "./CartContext";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  removeFromCart,
+  updateQuantity,
+  clearCart,
+  selectCartItems,
+  selectCartTotal,
+  selectCartCount,
+} from "../Redux/slice/cartSlice.js";
 
 export default function CartPage({ user }) {
   const navigate = useNavigate();
-  const { cart, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCart();
+  const dispatch = useDispatch();
+  
+  const cart = useSelector(selectCartItems);
+  const cartTotal = useSelector(selectCartTotal);
+  const cartCount = useSelector(selectCartCount);
 
   const handleCheckout = () => {
     if (!user) {
-      // User not logged in - redirect to login with intended destination
       navigate("/login", { state: { from: "/checkout" } });
     } else {
-      // User logged in - proceed to checkout
       navigate("/checkout");
     }
   };
@@ -51,7 +61,7 @@ export default function CartPage({ user }) {
             Shopping Cart
           </h1>
           <button
-            onClick={clearCart}
+            onClick={() => dispatch(clearCart())}
             className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white font-medium text-sm transition-colors"
           >
             Clear All
@@ -87,7 +97,7 @@ export default function CartPage({ user }) {
                 <div className="flex items-center gap-4 mt-4">
                   <div className="flex items-center border border-gray-300 dark:border-gray-700">
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
                       className="w-10 h-10 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
                     >
                       −
@@ -96,7 +106,7 @@ export default function CartPage({ user }) {
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
                       className="w-10 h-10 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
                     >
                       +
@@ -104,7 +114,7 @@ export default function CartPage({ user }) {
                   </div>
 
                   <button
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => dispatch(removeFromCart(item.id))}
                     className="text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
                   >
                     Remove
@@ -130,10 +140,10 @@ export default function CartPage({ user }) {
           <div className="max-w-md ml-auto space-y-4">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600 dark:text-gray-400">
-                Items ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+                Items ({cartCount})
               </span>
               <span className="text-black dark:text-white font-medium">
-                {getCartTotal().toLocaleString("en-US", {
+                {cartTotal.toLocaleString("en-US", {
                   style: "currency",
                   currency: "USD",
                 })}
@@ -145,7 +155,7 @@ export default function CartPage({ user }) {
                 Total
               </span>
               <span className="text-2xl font-bold text-black dark:text-white">
-                {getCartTotal().toLocaleString("en-US", {
+                {cartTotal.toLocaleString("en-US", {
                   style: "currency",
                   currency: "USD",
                 })}

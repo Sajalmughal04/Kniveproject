@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { useCart } from "./CartContext";
+import { useDispatch } from "react-redux"; // ✅ Redux
+import { addToCart } from "../Redux/slice/cartSlice"; // ✅ Redux Action
 import { useWishlist } from "./WishlistContext";
 import { Heart } from "lucide-react";
 import SkeletonCard from "./SkeletonCard";
@@ -12,7 +13,7 @@ const API_URL = "http://localhost:3000/api";
 
 const AllProducts = ({ searchTerm = "" }) => {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const dispatch = useDispatch(); // ✅ Redux Dispatch
   const { toggleWishlist, isInWishlist } = useWishlist();
   const hasFetched = useRef(false);
 
@@ -105,7 +106,7 @@ const AllProducts = ({ searchTerm = "" }) => {
     return result;
   }, [products, activeCategory, sortOrder, searchTerm]);
 
-  // Add to cart
+  // ✅ Add to cart - NOW USING REDUX
   const handleAddToCart = (product, e) => {
     e.stopPropagation();
     
@@ -116,7 +117,7 @@ const AllProducts = ({ searchTerm = "" }) => {
     
     console.log('🛒 Adding to cart:', product.title);
     
-    addToCart({ 
+    dispatch(addToCart({ 
       id: product._id,
       name: product.title,
       price: product.price,
@@ -124,7 +125,7 @@ const AllProducts = ({ searchTerm = "" }) => {
         ? product.images[0].url 
         : "https://via.placeholder.com/400",
       quantity: 1 
-    });
+    }));
   };
 
   // Toggle wishlist
@@ -363,7 +364,7 @@ const AllProducts = ({ searchTerm = "" }) => {
                       <div className="mt-auto">
                         <div className="flex items-center justify-between mb-4">
                           <p className="text-2xl font-bold text-black dark:text-white">
-                            Rs. {(product.price || 0).toFixed(2)}
+                            ${(product.price || 0).toFixed(2)}
                           </p>
                           
                           {product.stock > 0 && (

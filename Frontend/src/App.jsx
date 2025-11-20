@@ -1,12 +1,13 @@
 // src/App.jsx - WITH REDUX INTEGRATION
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { Provider, useSelector } from "react-redux";
-import { store } from "./redux/store";
+import { Provider, useSelector, useDispatch } from "react-redux";
+import { store } from "./Redux/store.js";
+import { selectToast, clearToast } from "./Redux/slice/cartSlice.js";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "./Knive/Navbar";
 import Footer from "./Knive/Footer";
 import WhatsAppButton from "./Knive/WhatsappButton";
-import { CartProvider } from "./Knive/CartContext";
 import { WishlistProvider } from "./Knive/WishlistContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -59,10 +60,45 @@ function ScrollToTop() {
   return null;
 }
 
+// ✅ Redux Cart Toast Notification Component
+// ✅ FIXED Redux Cart Toast Notification Component
+function ReduxToast() {
+  const toast = useSelector(selectToast);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        dispatch(clearToast());
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [toast, dispatch]);
+
+  // ✅ ADD KEY PROP to force re-render when toast content changes
+  return (
+    <AnimatePresence mode="wait">
+      {toast && (
+        <motion.div
+          key={toast} // ✅ This forces a new animation when content changes
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 30 }}
+          transition={{ duration: 0.4 }}
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-xl shadow-lg z-50 text-sm font-medium"
+        >
+          {toast}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 // ✅ Protected User Route - NOW USING REDUX
 function ProtectedRoute({ children }) {
   const location = useLocation();
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth || {});
   
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
@@ -138,7 +174,7 @@ function UserLayout() {
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
   
   // Get user from Redux instead of props
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth || {});
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -175,7 +211,7 @@ function UserLayout() {
             <Route path="/product/:id/review" element={<ReviewPage />} />
             
             {/* Cart & Wishlist */}
-            <Route path="/cart" element={<CartPage />} />
+            <Route path="/cart" element={<CartPage user={user} />} />
             <Route path="/wishlist" element={<Wishlist />} />
             
             {/* Info Pages */}
@@ -235,6 +271,10 @@ function UserLayout() {
 
       <Footer />
       <WhatsAppButton />
+      
+      {/* ✅ Redux Toast Notification - Inline Component */}
+      <ReduxToast />
+      
       <ToastContainer 
         position="top-right"
         autoClose={3000}
@@ -288,15 +328,13 @@ export default function App() {
             } 
           />
 
-          {/* User Routes - Wrapped in CartProvider & WishlistProvider */}
+          {/* ✅ User Routes - CartProvider REMOVED, using Redux now */}
           <Route 
             path="/*" 
             element={
-              <CartProvider>
-                <WishlistProvider>
-                  <UserLayout />
-                </WishlistProvider>
-              </CartProvider>
+              <WishlistProvider>
+                <UserLayout />
+              </WishlistProvider>
             }
           />
         </Routes>

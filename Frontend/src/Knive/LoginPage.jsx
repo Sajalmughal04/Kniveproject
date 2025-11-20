@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { toast } from "react-toastify";
 import { loginStart, loginSuccess, loginFailure, clearError } from "../Redux/slice/authSlice.js";
+import { showToast } from "../Redux/slice/cartSlice.js"; // ✅ Import Redux toast action
 
 const API_URL = "http://localhost:3000/api/auth";
 
@@ -12,7 +12,6 @@ const LoginPage = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   
-  // ✅ Get loading and error from Redux
   const { loading, error } = useSelector((state) => state.auth);
   
   const [formData, setFormData] = useState({
@@ -21,10 +20,8 @@ const LoginPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
 
-  // Get the page user was trying to access (default to /shop which is homepage)
   const from = location.state?.from || '/shop';
 
-  // Clear error when component unmounts
   useEffect(() => {
     return () => {
       dispatch(clearError());
@@ -36,14 +33,12 @@ const LoginPage = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    // Clear error when user starts typing
     if (error) dispatch(clearError());
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.email || !formData.password) {
       dispatch(loginFailure("Please enter both email and password"));
       return;
@@ -60,9 +55,7 @@ const LoginPage = () => {
 
       console.log('✅ Login response:', response.data);
 
-      // Check if response is successful
       if (response.data.success) {
-        // Extract token and user data from correct structure
         const token = response.data.data.token;
         const userData = {
           _id: response.data.data._id,
@@ -73,27 +66,23 @@ const LoginPage = () => {
           bio: response.data.data.bio || '',
         };
 
-        // ✅ Dispatch Redux action (automatically saves to localStorage)
+        // ✅ Dispatch Redux action
         dispatch(loginSuccess({ user: userData, token }));
         
-        console.log('💾 Profile created and saved via Redux:', userData);
-        
-        // Show success message with toast
-        toast.success(`Welcome back, ${userData.name}! 🎉`, {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        console.log('💾 Profile saved via Redux:', userData);
         
         // Clear form
         setFormData({ email: "", password: "" });
         
-        // ✅ Always redirect to /shop (homepage) after login
-        console.log('🏠 Redirecting to homepage: /shop');
-        navigate('/shop', { replace: true });
+        // ✅ FIXED: Use ONLY Redux toast (not react-toastify)
+        dispatch(showToast(`Welcome back, ${userData.name}! 🎉`));
+        
+        // ✅ Navigate after a short delay
+        setTimeout(() => {
+          console.log('🏠 Redirecting to:', from);
+          navigate(from, { replace: true });
+        }, 1200);
+        
       } else {
         dispatch(loginFailure("Login failed. Please try again."));
       }
@@ -101,14 +90,11 @@ const LoginPage = () => {
       console.error('❌ Login error:', err);
       console.error('Error response:', err.response?.data);
       
-      // Handle different error types
       let errorMessage = "An error occurred. Please try again.";
       
       if (err.response) {
-        // Server responded with error
         errorMessage = err.response.data?.message || "Invalid email or password";
       } else if (err.request) {
-        // Request made but no response
         errorMessage = "Cannot connect to server. Please check if backend is running.";
       }
       
@@ -127,7 +113,6 @@ const LoginPage = () => {
         </p>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-          {/* Show message if redirected from checkout or other protected route */}
           {from !== '/shop' && (
             <div className="mb-6 p-4 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-600 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-300 text-center font-semibold">

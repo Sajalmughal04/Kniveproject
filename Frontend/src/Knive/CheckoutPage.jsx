@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
-import { useCart } from './CartContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { 
+  selectCartItems, 
+  selectCartTotal, 
+  clearCart,
+  showToast 
+} from '../Redux/slice/cartSlice';
 import StripeCheckout from './StripeCheckout';
 
 export default function CheckoutPage() {
-  const { cart, getCartTotal, clearCart } = useCart();
+  const dispatch = useDispatch();
+  const cart = useSelector(selectCartItems);
+  const cartTotal = useSelector(selectCartTotal);
+  
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [orderDetails, setOrderDetails] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -30,6 +41,12 @@ export default function CheckoutPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validation
+    if (!formData.name || !formData.email || !formData.phone || !formData.street || !formData.city || !formData.state || !formData.zipCode) {
+      dispatch(showToast('⚠️ Please fill in all required fields'));
+      return;
+    }
+
     // If card payment, show Stripe checkout
     if (formData.paymentMethod === 'card') {
       setShowPayment(true);
@@ -40,7 +57,7 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const subtotal = getCartTotal();
+      const subtotal = cartTotal;
       const shipping = 200;
       const tax = subtotal * 0.05;
       
@@ -83,17 +100,32 @@ export default function CheckoutPage() {
       const data = await response.json();
 
       if (data.success) {
+        // Store order details for receipt
+        setOrderDetails({
+          orderNumber: data.order?.orderNumber || Math.floor(100000 + Math.random() * 900000),
+          date: new Date().toLocaleString('en-PK', { 
+            dateStyle: 'medium', 
+            timeStyle: 'short' 
+          }),
+          customerInfo: formData,
+          items: cart,
+          subtotal: subtotal,
+          shipping: shipping,
+          tax: tax,
+          total: subtotal + shipping + tax,
+          paymentMethod: formData.paymentMethod
+        });
+
         setSuccess(true);
-        clearCart();
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 3000);
+        setShowReceipt(true); // Show receipt modal
+        dispatch(clearCart());
+        dispatch(showToast('✅ Order placed successfully!'));
       } else {
-        alert('❌ Failed to place order: ' + data.message);
+        dispatch(showToast('❌ Failed to place order: ' + data.message));
       }
     } catch (error) {
       console.error('Order creation error:', error);
-      alert('❌ Failed to place order. Please try again.');
+      dispatch(showToast('❌ Failed to place order. Please try again.'));
     }
 
     setLoading(false);
@@ -102,11 +134,42 @@ export default function CheckoutPage() {
   // Handle Stripe Payment Success
   const handlePaymentSuccess = (paymentData) => {
     console.log('Payment successful:', paymentData);
+    
+    const subtotal = cartTotal;
+    const shipping = 200;
+    const tax = subtotal * 0.05;
+
+    // Store order details for receipt
+    setOrderDetails({
+      orderNumber: paymentData.orderNumber || Math.floor(100000 + Math.random() * 900000),
+      date: new Date().toLocaleString('en-PK', { 
+        dateStyle: 'medium', 
+        timeStyle: 'short' 
+      }),
+      customerInfo: formData,
+      items: cart,
+      subtotal: subtotal,
+      shipping: shipping,
+      tax: tax,
+      total: subtotal + shipping + tax,
+      paymentMethod: 'card'
+    });
+
     setSuccess(true);
-    clearCart();
+    setShowReceipt(true); // Show receipt modal
+    dispatch(clearCart());
+    dispatch(showToast('✅ Payment successful!'));
+  };
+
+  const closeReceipt = () => {
+    setShowReceipt(false);
     setTimeout(() => {
-      window.location.href = '/payment-success?order=' + paymentData.orderNumber;
-    }, 2000);
+      window.location.href = '/';
+    }, 500);
+  };
+
+  const printReceipt = () => {
+    window.print();
   };
 
   if (cart.length === 0 && !success) {
@@ -127,20 +190,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-900 to-black flex items-center justify-center p-6">
-        <div className="text-center bg-white/10 backdrop-blur-lg p-12 rounded-3xl border border-white/20">
-          <div className="text-7xl mb-6">✅</div>
-          <h1 className="text-4xl font-bold text-white mb-4">Order Placed Successfully!</h1>
-          <p className="text-green-300 text-xl mb-6">Your order has been received and is being processed.</p>
-          <p className="text-gray-300">Redirecting...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const subtotal = getCartTotal();
+  const subtotal = cartTotal;
   const shipping = 200;
   const tax = subtotal * 0.05;
   const total = subtotal + shipping + tax;
@@ -173,7 +223,7 @@ export default function CheckoutPage() {
               <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10">
                 <h2 className="text-3xl font-bold text-white mb-8">Shipping Information</h2>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-5">
                   <div>
                     <label className="block text-white font-semibold mb-2">Full Name *</label>
                     <input
@@ -269,16 +319,65 @@ export default function CheckoutPage() {
 
                   <div>
                     <label className="block text-white font-semibold mb-2">Payment Method *</label>
-                    <select
-                      name="paymentMethod"
-                      value={formData.paymentMethod}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                    >
-                      <option value="cash_on_delivery">💵 Cash on Delivery</option>
-                      <option value="card">💳 Credit/Debit Card (Stripe)</option>
-                      <option value="bank_transfer">🏦 Bank Transfer</option>
-                    </select>
+
+                    <div className="space-y-3">
+                      {/* Cash on Delivery */}
+                      <label
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition 
+                        ${formData.paymentMethod === "cash_on_delivery"
+                          ? "bg-yellow-500/20 border border-yellow-500"
+                          : "bg-white/10 border border-white/20 hover:bg-white/20"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="cash_on_delivery"
+                          checked={formData.paymentMethod === "cash_on_delivery"}
+                          onChange={handleChange}
+                          className="accent-yellow-500 w-5 h-5"
+                        />
+                        <span className="text-white text-lg">💵 Cash on Delivery</span>
+                      </label>
+
+                      {/* Card Payment */}
+                      <label
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition 
+                        ${formData.paymentMethod === "card"
+                          ? "bg-yellow-500/20 border border-yellow-500"
+                          : "bg-white/10 border border-white/20 hover:bg-white/20"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="card"
+                          checked={formData.paymentMethod === "card"}
+                          onChange={handleChange}
+                          className="accent-yellow-500 w-5 h-5"
+                        />
+                        <span className="text-white text-lg">💳 Credit / Debit Card (Stripe)</span>
+                      </label>
+
+                      {/* Bank Transfer */}
+                      <label
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition 
+                        ${formData.paymentMethod === "bank_transfer"
+                          ? "bg-yellow-500/20 border border-yellow-500"
+                          : "bg-white/10 border border-white/20 hover:bg-white/20"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="bank_transfer"
+                          checked={formData.paymentMethod === "bank_transfer"}
+                          onChange={handleChange}
+                          className="accent-yellow-500 w-5 h-5"
+                        />
+                        <span className="text-white text-lg">🏦 Bank Transfer</span>
+                      </label>
+                    </div>
                   </div>
 
                   <div>
@@ -294,15 +393,15 @@ export default function CheckoutPage() {
                   </div>
 
                   <button
-                    type="submit"
+                    onClick={handleSubmit}
                     disabled={loading}
                     className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-bold py-4 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-yellow-500/50"
                   >
                     {loading ? '⏳ Processing...' : 
                      formData.paymentMethod === 'card' ? '💳 Proceed to Payment' : 
-                     `🛍️ Place Order - Rs. ${total.toFixed(2)}`}
+                     `🛍️ Place Order - ${total.toFixed(2)}`}
                   </button>
-                </form>
+                </div>
               </div>
             ) : (
               <>
@@ -343,7 +442,7 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                     <p className="font-bold text-yellow-400">
-                      Rs. {(item.price * item.quantity).toFixed(2)}
+                      ${(item.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
                 ))}
@@ -352,19 +451,19 @@ export default function CheckoutPage() {
               <div className="border-t border-white/20 pt-6 space-y-3">
                 <div className="flex justify-between text-gray-300">
                   <span>Subtotal:</span>
-                  <span className="font-semibold">Rs. {subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-300">
                   <span>Shipping:</span>
-                  <span className="font-semibold">Rs. {shipping.toFixed(2)}</span>
+                  <span className="font-semibold">${shipping.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-300">
                   <span>Tax (5%):</span>
-                  <span className="font-semibold">Rs. {tax.toFixed(2)}</span>
+                  <span className="font-semibold">${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-2xl font-bold text-white border-t border-white/20 pt-4">
                   <span>Total:</span>
-                  <span className="text-yellow-400">Rs. {total.toFixed(2)}</span>
+                  <span className="text-yellow-400">${total.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -381,6 +480,131 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* Receipt Modal */}
+      {showReceipt && orderDetails && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Receipt Header */}
+            <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-8 text-center">
+              <div className="text-6xl mb-4">✅</div>
+              <h2 className="text-4xl font-bold mb-2">Order Confirmed!</h2>
+              <p className="text-green-100 text-lg">Thank you for your purchase</p>
+            </div>
+
+            {/* Receipt Body */}
+            <div className="p-8">
+              {/* Order Info */}
+              <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-gray-600 text-sm mb-1">Order Number</p>
+                    <p className="text-2xl font-bold text-gray-800">#{orderDetails.orderNumber}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-600 text-sm mb-1">Date & Time</p>
+                    <p className="font-semibold text-gray-800">{orderDetails.date}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span>👤</span> Customer Details
+                </h3>
+                <div className="bg-gray-50 rounded-xl p-6 space-y-2">
+                  <p className="text-gray-800"><span className="font-semibold">Name:</span> {orderDetails.customerInfo.name}</p>
+                  <p className="text-gray-800"><span className="font-semibold">Email:</span> {orderDetails.customerInfo.email}</p>
+                  <p className="text-gray-800"><span className="font-semibold">Phone:</span> {orderDetails.customerInfo.phone}</p>
+                  <p className="text-gray-800"><span className="font-semibold">Address:</span> {orderDetails.customerInfo.street}, {orderDetails.customerInfo.city}, {orderDetails.customerInfo.state} - {orderDetails.customerInfo.zipCode}</p>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span>🛍️</span> Order Items
+                </h3>
+                <div className="space-y-3">
+                  {orderDetails.items.map((item, index) => (
+                    <div key={index} className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-800">{item.name}</h4>
+                        <p className="text-sm text-gray-600">
+                          Qty: {item.quantity} × ${item.price.toFixed(2)}
+                        </p>
+                      </div>
+                      <p className="font-bold text-gray-800">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment Summary */}
+              <div className="border-t-2 border-gray-200 pt-6 mb-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between text-gray-700">
+                    <span>Subtotal:</span>
+                    <span className="font-semibold">${orderDetails.subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Shipping:</span>
+                    <span className="font-semibold">${orderDetails.shipping.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Tax (5%):</span>
+                    <span className="font-semibold">${orderDetails.tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-2xl font-bold text-gray-900 border-t-2 border-gray-300 pt-3">
+                    <span>Total Paid:</span>
+                    <span className="text-green-600">${orderDetails.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <p className="text-gray-800">
+                  <span className="font-semibold">Payment Method:</span>{' '}
+                  {orderDetails.paymentMethod === 'cash_on_delivery' && '💵 Cash on Delivery'}
+                  {orderDetails.paymentMethod === 'card' && '💳 Credit/Debit Card'}
+                  {orderDetails.paymentMethod === 'bank_transfer' && '🏦 Bank Transfer'}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={printReceipt}
+                  className="flex-1 bg-gray-800 hover:bg-gray-900 text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-2"
+                >
+                  <span>🖨️</span> Print Receipt
+                </button>
+                <button
+                  onClick={closeReceipt}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 rounded-xl transition"
+                >
+                  Continue Shopping
+                </button>
+              </div>
+
+              {/* Footer Note */}
+              <div className="mt-6 text-center text-gray-600 text-sm">
+                <p>Thank you for shopping with us! 💝</p>
+                <p className="mt-1">A confirmation email has been sent to {orderDetails.customerInfo.email}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
