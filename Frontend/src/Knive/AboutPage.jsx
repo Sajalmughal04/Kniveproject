@@ -28,14 +28,14 @@ const AboutPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
       {/* Hero Section */}
-      <div className="relative w-full h-[60vh] flex items-center justify-center bg-black">
+      <div className="relative w-full h-[60vh] flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div className="text-center px-6 max-w-4xl">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">
             Crafting Excellence Since 2008
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-gray-600 dark:text-gray-300">
             Where tradition meets innovation in every blade
           </p>
         </div>
@@ -47,13 +47,13 @@ const AboutPage = () => {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="text-center p-6 border-2 border-black rounded-lg"
+              className="text-center p-6 border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
             >
-              <stat.icon className="w-10 h-10 mx-auto mb-3 text-black" />
-              <h3 className="text-3xl font-bold text-black mb-1">
+              <stat.icon className="w-10 h-10 mx-auto mb-3 text-gray-900 dark:text-white" />
+              <h3 className="text-3xl font-bold  mb-1 text-gray-900 dark:text-white">
                 {stat.value}
               </h3>
-              <p className="text-sm text-gray-600">{stat.label}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -62,11 +62,11 @@ const AboutPage = () => {
       {/* Story Section */}
       <section className="max-w-4xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4 text-black">Our Story</h2>
-          <div className="w-20 h-1 bg-black mx-auto"></div>
+          <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">Our Story</h2>
+          <div className="w-20 h-1 bg-gray-900 dark:bg-white mx-auto"></div>
         </div>
 
-        <div className="space-y-6 text-lg text-gray-700 leading-relaxed">
+        <div className="space-y-6 text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
           <p>
             Founded in 2008, BladeCraft emerged from a simple yet powerful vision: to create knives that professionals trust and enthusiasts cherish. What started as a small workshop has grown into an internationally recognized brand.
           </p>
@@ -80,24 +80,24 @@ const AboutPage = () => {
       </section>
 
       {/* Values Section */}
-      <section className="bg-gray-50 py-16">
+      <section className="bg-gray-50 dark:bg-gray-800 py-16">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 text-black">What Sets Us Apart</h2>
-            <div className="w-20 h-1 bg-black mx-auto"></div>
+            <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">What Sets Us Apart</h2>
+            <div className="w-20 h-1 bg-gray-900 dark:bg-white mx-auto"></div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {values.map((value, index) => (
               <div
                 key={index}
-                className="p-6 bg-white rounded-lg border-2 border-black"
+                className="p-6 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700"
               >
-                <value.icon className="w-10 h-10 text-black mb-4" />
-                <h3 className="text-xl font-bold mb-3 text-black">
+                <value.icon className="w-10 h-10 text-gray-900 dark:text-white mb-4" />
+                <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
                   {value.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                   {value.description}
                 </p>
               </div>
@@ -107,24 +107,24 @@ const AboutPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-black py-16">
+      <section className="bg-gray-100 dark:bg-gray-900 py-16">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Experience the BladeCraft Difference
           </h2>
-          <p className="text-xl text-gray-300 mb-8">
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
             Join thousands of satisfied customers who trust our craftsmanship
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => window.location.href = "/"}
-              className="bg-white text-black font-semibold py-3 px-8 rounded-lg hover:bg-gray-200 transition"
+              className="bg-white text-gray-900 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition dark:bg-yellow-500 dark:text-gray-900 dark:hover:bg-yellow-400"
             >
               Explore Collection
             </button>
             <button
               onClick={() => window.location.href = "/contact"}
-              className="bg-black text-white font-semibold py-3 px-8 rounded-lg border-2 border-white hover:bg-gray-900 transition"
+              className="bg-transparent text-gray-900 font-semibold py-3 px-8 rounded-lg border-2 border-gray-900 hover:bg-gray-100 transition dark:bg-transparent dark:border-gray-300 dark:text-white dark:hover:bg-gray-800"
             >
               Contact Us
             </button>
