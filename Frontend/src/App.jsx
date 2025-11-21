@@ -1,4 +1,4 @@
-// src/App.jsx - WITH REDUX INTEGRATION
+// src/App.jsx - FULLY UPDATED VERSION (COMPLETE)
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Provider, useSelector, useDispatch } from "react-redux";
@@ -13,7 +13,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
-// ✅ Lazy-loaded user pages
+// ✅ User pages
 const ShopPage = lazy(() => import("./Knive/ShopPage.jsx"));
 const CategoryPage = lazy(() => import("./Knive/CategoryPage.jsx"));
 const AllCategoriesPage = lazy(() => import("./Knive/AllCategoriesPage.jsx"));
@@ -31,9 +31,9 @@ const Wishlist = lazy(() => import("./Knive/Wishlist.jsx"));
 const OrderTrackingPage = lazy(() => import("./Knive/OrderTrackingPage.jsx"));
 const ReviewPage = lazy(() => import("./Knive/ReviewPage.jsx"));
 
-// ✅ Lazy-loaded admin pages
+// ✅ Admin pages - PROPERLY IMPORTED
+const Dashboard = lazy(() => import("./Admin/Dashboard.jsx"));
 const AdminPanel = lazy(() => import("./Admin/AdminPanel.jsx"));
-const AdminLogin = lazy(() => import("./Admin/AdminLogin.jsx"));
 
 // ✅ Loading Spinner Component
 function LoadingSpinner() {
@@ -61,7 +61,6 @@ function ScrollToTop() {
 }
 
 // ✅ Redux Cart Toast Notification Component
-// ✅ FIXED Redux Cart Toast Notification Component
 function ReduxToast() {
   const toast = useSelector(selectToast);
   const dispatch = useDispatch();
@@ -76,12 +75,11 @@ function ReduxToast() {
     }
   }, [toast, dispatch]);
 
-  // ✅ ADD KEY PROP to force re-render when toast content changes
   return (
     <AnimatePresence mode="wait">
       {toast && (
         <motion.div
-          key={toast} // ✅ This forces a new animation when content changes
+          key={toast}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 30 }}
@@ -98,7 +96,12 @@ function ReduxToast() {
 // ✅ Protected User Route - NOW USING REDUX
 function ProtectedRoute({ children }) {
   const location = useLocation();
-  const { isAuthenticated } = useSelector((state) => state.auth || {});
+  const { isAuthenticated, user } = useSelector((state) => state.auth || {});
+  
+  // ✅ If user is admin, don't allow access to user routes
+  if (isAuthenticated && user?.role === 'admin') {
+    return <Navigate to="/Dashboard" replace />;
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
@@ -107,50 +110,47 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// 🔐 Admin Protected Route
+// 🔐 Admin Protected Route - SIMPLIFIED
 function AdminProtectedRoute({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasVerified, setHasVerified] = useState(false);
 
   useEffect(() => {
-    if (hasVerified) return;
-    setHasVerified(true);
-    verifyAdminToken();
-  }, [hasVerified]);
-
-  const verifyAdminToken = async () => {
-    try {
+    const checkAuth = async () => {
       const token = localStorage.getItem('adminToken');
       
       if (!token) {
+        console.log('❌ No admin token found');
         setIsAuthenticated(false);
-        setIsLoading(false);
         return;
       }
 
-      const response = await axios.get('http://localhost:3000/api/admin/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      try {
+        console.log('🔍 Verifying admin token...');
+        const response = await axios.get('http://localhost:3000/api/admin/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      if (response.data.success) {
-        setIsAuthenticated(true);
-      } else {
+        if (response.data.success) {
+          console.log('✅ Admin verified!');
+          setIsAuthenticated(true);
+        } else {
+          console.log('❌ Invalid admin token');
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminData');
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('❌ Admin verification failed:', error);
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminData');
         setIsAuthenticated(false);
       }
-    } catch (error) {
-      console.error('Admin verification error:', error);
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminData');
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  if (isLoading) {
+    checkAuth();
+  }, []);
+
+  if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <div className="text-center">
@@ -162,9 +162,11 @@ function AdminProtectedRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
+    console.log('🚫 Admin not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
   }
 
+  console.log('✅ Admin authenticated, showing dashboard');
   return children;
 }
 
@@ -173,7 +175,6 @@ function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
   
-  // Get user from Redux instead of props
   const { user, isAuthenticated } = useSelector((state) => state.auth || {});
 
   useEffect(() => {
@@ -197,35 +198,33 @@ function UserLayout() {
       <main className="flex-grow pt-20">
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
-            {/* ✅ HOME PAGE - Always accessible (No login required) */}
             <Route path="/" element={<ShopPage searchTerm={searchTerm} />} />
             <Route path="/shop" element={<ShopPage searchTerm={searchTerm} />} />
             <Route path="/home" element={<ShopPage searchTerm={searchTerm} />} />
             
-            {/* ✅ Category Routes */}
             <Route path="/categories" element={<AllCategoriesPage />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             
-            {/* ✅ Product Routes */}
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/product/:id/review" element={<ReviewPage />} />
             
-            {/* Cart & Wishlist */}
             <Route path="/cart" element={<CartPage user={user} />} />
             <Route path="/wishlist" element={<Wishlist />} />
             
-            {/* Info Pages */}
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/faq" element={<FAQs />} />
             <Route path="/track-order" element={<OrderTrackingPage />} />
             
-            {/* Auth Routes - Redirect to home if already logged in */}
             <Route 
               path="/login" 
               element={
                 isAuthenticated ? (
-                  <Navigate to="/" replace />
+                  user?.role === 'admin' ? (
+                    <Navigate to="/Dashboard" replace />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
                 ) : (
                   <LoginPage />
                 )
@@ -242,10 +241,8 @@ function UserLayout() {
               } 
             />
             
-            {/* Payment Success Route */}
             <Route path="/payment-success" element={<PaymentSuccess />} />
             
-            {/* 🔐 Protected Routes - Login required */}
             <Route 
               path="/checkout" 
               element={
@@ -263,7 +260,6 @@ function UserLayout() {
               } 
             />
 
-            {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -272,7 +268,6 @@ function UserLayout() {
       <Footer />
       <WhatsAppButton />
       
-      {/* ✅ Redux Toast Notification - Inline Component */}
       <ReduxToast />
       
       <ToastContainer 
@@ -311,24 +306,37 @@ function NotFound() {
   );
 }
 
-// ✅ Main App - WITH REDUX PROVIDER
+// ✅ Main App - FIXED ADMIN ROUTING
 export default function App() {
   return (
     <Provider store={store}>
       <Router>
         <Routes>
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+          {/* ✅ Admin Dashboard Route - NOW PROTECTED */}
+          <Route 
+            path="/Dashboard" 
+            element={
+              <AdminProtectedRoute>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Dashboard />
+                </Suspense>
+              </AdminProtectedRoute>
+            } 
+          />
+          
+          {/* ✅ Admin Panel Route - Already Protected */}
           <Route 
             path="/admin/*" 
             element={
               <AdminProtectedRoute>
-                <AdminPanel />
+                <Suspense fallback={<LoadingSpinner />}>
+                  <AdminPanel />
+                </Suspense>
               </AdminProtectedRoute>
             } 
           />
 
-          {/* ✅ User Routes - CartProvider REMOVED, using Redux now */}
+          {/* User Routes */}
           <Route 
             path="/*" 
             element={

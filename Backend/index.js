@@ -1,17 +1,23 @@
+// ============================================
+// 📁 backend/index.js - COMPLETE CODE
+// ============================================
+
 import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import bcrypt from "bcryptjs";
 import Admin from "./models/Admin.js";
+import User from "./models/User.js"; // ✅ Import User model
 import productRoutes from "./routes/productRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
-import categoryRoutes from "./routes/categoryRoutes.js"; // ✅ NEW IMPORT
+import categoryRoutes from "./routes/categoryRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -20,7 +26,9 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ============================================
 // CORS Configuration
+// ============================================
 app.use(cors({
   origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
   credentials: true,
@@ -28,21 +36,26 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// ✅ FIX: Webhook route with raw body parser (SPECIFIC PATH)
+// ============================================
+// Webhook route with raw body parser (BEFORE json parser)
+// ============================================
 app.post("/api/payment/webhook", 
   express.raw({ type: "application/json" }), 
   (req, res, next) => {
-    // Forward to payment routes handler
     req.url = '/webhook';
     paymentRoutes(req, res, next);
   }
 );
 
+// ============================================
 // Body Parser Middleware
+// ============================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request Logger Middleware (Only in Development)
+// ============================================
+// Request Logger Middleware (Development Only)
+// ============================================
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
     console.log(`${req.method} ${req.path}`, {
@@ -53,78 +66,103 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
+// ============================================
 // Static Files for Uploads
+// ============================================
 if (process.env.USE_LOCAL_STORAGE === "true") {
   app.use("/uploads", express.static(path.join(__dirname, process.env.UPLOADS_DIR || "uploads")));
 }
 
-// Create Default Admin
+// ============================================
+// ✅ CREATE DEFAULT ADMIN FUNCTION
+// ============================================
 const createDefaultAdmin = async () => {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || "admin@knives.com";
-    const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
-    const existingAdmin = await Admin.findOne({ email: adminEmail });
+    // Check if admin user already exists
+    const adminUser = await User.findOne({ role: 'admin' });
     
-    if (!existingAdmin) {
-      console.log("\n📝 Creating default admin...");
-      const admin = await Admin.create({ 
-        name: "Default Admin", 
-        email: adminEmail, 
-        password: adminPassword 
-      });
-      console.log("✅ Default admin created:", admin.email);
-      const testMatch = await admin.comparePassword(adminPassword);
-      console.log("🔍 Password test:", testMatch ? "✅ PASS" : "❌ FAIL");
-    } else {
-      console.log("✅ Admin already exists:", existingAdmin.email);
+    if (adminUser) {
+      console.log('✅ Admin user already exists');
+      console.log('📧 Admin Email:', adminUser.email);
+      return;
     }
+
+    // Create default admin user
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    
+    const defaultAdmin = new User({
+      name: 'Admin',
+      email: 'admin@knives.com',
+      password: hashedPassword,
+      phone: '1234567890',
+      role: 'admin', // ✅ Important: Set role as admin
+      address: 'Admin Office',
+      bio: 'System Administrator'
+    });
+
+    await defaultAdmin.save();
+    
+    console.log('\n═══════════════════════════════════════');
+    console.log('✅ Default Admin User Created!');
+    console.log('═══════════════════════════════════════');
+    console.log('📧 Email: admin@knives.com');
+    console.log('🔑 Password: admin123');
+    console.log('👑 Role: admin');
+    console.log('═══════════════════════════════════════');
+    console.log('⚠️  IMPORTANT: Change these credentials after first login!\n');
+    
   } catch (error) {
-    console.error("❌ Error creating default admin:", error.message);
+    console.error('❌ Error creating default admin:', error.message);
   }
 };
 
-// Helper function to log endpoints (only in development)
+// ============================================
+// 📊 LOG ENDPOINTS FUNCTION (Optional)
+// ============================================
 const logEndpoints = () => {
-  if (process.env.NODE_ENV === 'development' && process.env.SHOW_ENDPOINTS === 'true') {
-    console.log(`\n📦 Available Endpoints:`);
-    console.log(`   - Products: /api/products`);
-    console.log(`   - Categories: /api/categories`); // ✅ NEW
-    console.log(`   - Admin: /api/admin`);
-    console.log(`   - Orders: /api/orders`);
-    console.log(`   - Auth: /api/auth`);
-    console.log(`   - Contact: /api/contact`);
-    console.log(`   - Payment: /api/payment\n`);
-    console.log(`🔐 Authentication Routes:`);
-    console.log(`   - POST /api/auth/register - Register new user`);
-    console.log(`   - POST /api/auth/login - Login user`);
-    console.log(`   - GET /api/auth/me - Get current user (Protected)`);
-    console.log(`   - PUT /api/auth/update - Update profile (Protected)`);
-    console.log(`   - PUT /api/auth/change-password - Change password (Protected)`);
-    console.log(`   - POST /api/auth/logout - Logout user (Protected)`);
-    console.log(`   - DELETE /api/auth/delete-account - Delete account (Protected)\n`);
-    console.log(`📂 Category Routes:`); // ✅ NEW
-    console.log(`   - GET /api/categories - Get all categories`);
-    console.log(`   - GET /api/categories/:slug - Get category by slug`);
-    console.log(`   - POST /api/categories - Create category (Admin)`);
-    console.log(`   - PUT /api/categories/:id - Update category (Admin)`);
-    console.log(`   - DELETE /api/categories/:id - Delete category (Admin)\n`);
-    console.log(`💳 Payment Routes:`);
-    console.log(`   - POST /api/payment/create-payment-intent - Create payment`);
-    console.log(`   - POST /api/payment/webhook - Stripe webhook`);
-    console.log(`   - GET /api/payment/payment-status/:id - Check payment status`);
-    console.log(`   - POST /api/payment/refund - Refund payment`);
-    console.log(`   - GET /api/payment/config - Get publishable key\n`);
+  if (process.env.SHOW_ENDPOINTS === 'true') {
+    console.log('📍 Available API Endpoints:');
+    console.log('   ──────────────────────────────────');
+    console.log('   GET    /');
+    console.log('   ──────────────────────────────────');
+    console.log('   GET    /api/products');
+    console.log('   POST   /api/products');
+    console.log('   PUT    /api/products/:id');
+    console.log('   DELETE /api/products/:id');
+    console.log('   ──────────────────────────────────');
+    console.log('   GET    /api/categories');
+    console.log('   POST   /api/categories');
+    console.log('   PUT    /api/categories/:id');
+    console.log('   DELETE /api/categories/:id');
+    console.log('   ──────────────────────────────────');
+    console.log('   GET    /api/orders');
+    console.log('   POST   /api/orders');
+    console.log('   ──────────────────────────────────');
+    console.log('   POST   /api/auth/login');
+    console.log('   POST   /api/auth/register');
+    console.log('   GET    /api/auth/profile');
+    console.log('   ──────────────────────────────────');
+    console.log('   POST   /api/contact');
+    console.log('   ──────────────────────────────────');
+    console.log('   POST   /api/payment/webhook');
+    console.log('   ──────────────────────────────────');
+    console.log('   GET    /api/admin');
+    console.log('   POST   /api/admin/login');
+    console.log('   ──────────────────────────────────\n');
   }
 };
 
+// ============================================
 // Root Route
+// ============================================
 app.get("/", (req, res) => {
   res.json({ 
-    message: "🚀 Server is running!", 
+    message: "🚀 Knives Backend Server is running!", 
     timestamp: new Date().toISOString(),
+    version: "1.0.0",
     endpoints: { 
       products: "/api/products",
-      categories: "/api/categories", // ✅ NEW
+      categories: "/api/categories",
       admin: "/api/admin", 
       orders: "/api/orders",
       auth: "/api/auth",
@@ -134,43 +172,63 @@ app.get("/", (req, res) => {
   });
 });
 
-// ✅ API Routes (Body parser KE BAAD, sahi order mein)
+// ============================================
+// API Routes
+// ============================================
 app.use("/api/products", productRoutes);
-app.use("/api/categories", categoryRoutes); // ✅ NEW ROUTE ADDED
-app.use("/api/admin", adminRoutes);
+app.use("/api/categories", categoryRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/admin", adminRoutes);
 
+// ============================================
 // 404 Handler
+// ============================================
 app.use((req, res) => {
   res.status(404).json({ 
     success: false, 
-    message: `Route ${req.method} ${req.path} not found` 
+    message: `Route ${req.method} ${req.path} not found`,
+    availableRoutes: [
+      '/api/products',
+      '/api/categories',
+      '/api/orders',
+      '/api/auth',
+      '/api/contact',
+      '/api/payment',
+      '/api/admin'
+    ]
   });
 });
 
+// ============================================
 // Global Error Handler
+// ============================================
 app.use((err, req, res, next) => {
   console.error("❌ Error:", err.stack);
   res.status(err.status || 500).json({ 
     success: false, 
-    message: err.message || "Internal Server Error" 
+    message: err.message || "Internal Server Error",
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 
+// ============================================
 // MongoDB Connection and Server Start
+// ============================================
 mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
     console.log("✅ MongoDB connected");
+    
+    // ✅ Create default admin after DB connection
     await createDefaultAdmin();
     
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`\n🚀 Server running on http://localhost:${PORT}\n`);
       
-      // Optional: Show endpoints only if enabled in .env
+      // Show endpoints if enabled
       logEndpoints();
     });
   })

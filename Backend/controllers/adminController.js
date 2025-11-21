@@ -4,10 +4,9 @@ import Admin from "../models/Admin.js";
 // ✅ Create JWT token
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+    expiresIn: process.env.JWT_EXPIRES_IN || "1",
   });
 };
-
 // ✅ Register Admin
 export const register = async (req, res, next) => {
   try {

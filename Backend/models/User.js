@@ -23,10 +23,22 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Please add a password'],
       minlength: 6,
     },
+    phone: {
+      type: String,
+      default: '',
+    },
+    address: {
+      type: String,
+      default: '',
+    },
+    bio: {
+      type: String,
+      default: '',
+    },
     role: {
       type: String,
-      enum: ['customer', 'admin'],
       default: 'customer',
+      enum: ['customer', 'admin'], // ✅ Admin role add kiya
     },
   },
   {

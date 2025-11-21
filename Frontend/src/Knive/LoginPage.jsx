@@ -1,9 +1,10 @@
+// src/Knive/LoginPage.jsx - FULLY UPDATED VERSION
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { loginStart, loginSuccess, loginFailure, clearError } from "../Redux/slice/authSlice.js";
-import { showToast } from "../Redux/slice/cartSlice.js"; // ✅ Import Redux toast action
+import { showToast } from "../Redux/slice/cartSlice.js";
 
 const API_URL = "http://localhost:3000/api/auth";
 
@@ -64,9 +65,34 @@ const LoginPage = () => {
           phone: response.data.data.phone || '',
           address: response.data.data.address || '',
           bio: response.data.data.bio || '',
+          role: response.data.data.role || 'customer',
         };
 
-        // ✅ Dispatch Redux action
+        // ✅ CHECK IF USER IS ADMIN
+        if (userData.role === 'admin') {
+          console.log('👑 Admin detected! Redirecting to admin dashboard...');
+          
+          // Save admin token in localStorage
+          localStorage.setItem('adminToken', token);
+          localStorage.setItem('adminData', JSON.stringify(userData));
+          
+          // ✅ IMPORTANT: Dispatch Redux state for admin too
+          dispatch(loginSuccess({ user: userData, token }));
+          
+          // Clear form
+          setFormData({ email: "", password: "" });
+          
+          // Show admin welcome message
+          dispatch(showToast(`Welcome Admin, ${userData.name}! 👑`));
+          
+          // ✅ FIXED: Navigate to correct path (/Dashboard instead of /Admin)
+          console.log('🔄 Navigating to /Dashboard...');
+          navigate('/Dashboard', { replace: true });
+          
+          return;
+        }
+
+        // ✅ Regular user login flow
         dispatch(loginSuccess({ user: userData, token }));
         
         console.log('💾 Profile saved via Redux:', userData);
@@ -74,14 +100,12 @@ const LoginPage = () => {
         // Clear form
         setFormData({ email: "", password: "" });
         
-        // ✅ FIXED: Use ONLY Redux toast (not react-toastify)
+        // Show welcome message
         dispatch(showToast(`Welcome back, ${userData.name}! 🎉`));
         
-        // ✅ Navigate after a short delay
-        setTimeout(() => {
-          console.log('🏠 Redirecting to:', from);
-          navigate(from, { replace: true });
-        }, 1200);
+        // Navigate to intended page
+        console.log('🏠 Redirecting to:', from);
+        navigate(from, { replace: true });
         
       } else {
         dispatch(loginFailure("Login failed. Please try again."));

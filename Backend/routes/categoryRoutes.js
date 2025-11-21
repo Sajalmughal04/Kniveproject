@@ -1,3 +1,4 @@
+// backend/routes/categoryRoutes.js - FULLY UPDATED AND CORRECTED
 import express from "express";
 import {
   getAllCategories,
@@ -6,7 +7,7 @@ import {
   updateCategory,
   deleteCategory,
 } from "../controllers/categoryController.js";
-import { protect } from "../Middleware/authMiddleware.js";
+import { protectUser } from "../Middleware/authMiddleware.js"; // ✅ FIXED: Changed from { protect } to { protectUser }
 
 const router = express.Router();
 
@@ -15,8 +16,8 @@ router.get("/", getAllCategories);
 router.get("/:slug", getCategoryBySlug);
 
 // ✅ Protected routes (Admin only)
-router.post("/", protect, createCategory);
-router.put("/:id", protect, updateCategory);
-router.delete("/:id", protect, deleteCategory);
+router.post("/", protectUser, createCategory); // ✅ FIXED: Changed from protect to protectUser
+router.put("/:id", protectUser, updateCategory); // ✅ FIXED: Changed from protect to protectUser
+router.delete("/:id", protectUser, deleteCategory); // ✅ FIXED: Changed from protect to protectUser
 
 export default router;

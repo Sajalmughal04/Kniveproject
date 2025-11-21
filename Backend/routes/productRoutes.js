@@ -1,3 +1,4 @@
+// backend/routes/productRoutes.js - FULLY UPDATED AND CORRECTED
 import express from "express";
 import { upload } from "../config/cloudinary.js";
 import {
@@ -8,7 +9,7 @@ import {
   deleteProduct,
   uploadProductImage
 } from "../controllers/productController.js";
-import { protect } from "../Middleware/authMiddleware.js";
+import { protectUser } from "../Middleware/authMiddleware.js"; // ✅ FIXED: Changed from { protect } to { protectUser }
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ router.get("/:id", getProductById);
 // Create product with image upload
 router.post(
   "/", 
-  protect, 
+  protectUser, // ✅ FIXED: Changed from protect to protectUser
   upload.single('image'), 
   createProduct
 );
@@ -28,7 +29,7 @@ router.post(
 // Update product with optional image upload
 router.put(
   "/:id", 
-  protect, 
+  protectUser, // ✅ FIXED: Changed from protect to protectUser
   upload.single('image'), 
   updateProduct
 );
@@ -36,14 +37,14 @@ router.put(
 // Delete product
 router.delete(
   "/:id", 
-  protect, 
+  protectUser, // ✅ FIXED: Changed from protect to protectUser
   deleteProduct
 );
 
 // ✅ Separate endpoint for image upload (optional - if you want to upload images separately)
 router.post(
   "/upload/image",
-  protect,
+  protectUser, // ✅ FIXED: Changed from protect to protectUser
   upload.single('image'),
   uploadProductImage
 );

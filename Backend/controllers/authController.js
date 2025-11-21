@@ -16,7 +16,7 @@ export const register = async (req, res) => {
   try {
     console.log('🚀 REGISTER ROUTE HIT');
     console.log('📦 Request Body:', req.body);
-    
+
     const { name, email, password } = req.body;
 
     // Validation
@@ -28,18 +28,19 @@ export const register = async (req, res) => {
       });
     }
 
+    const emailLower = email.toLowerCase();
+
     // Check if user exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: emailLower });
     if (userExists) {
-      console.log('❌ User already exists:', email);
+      console.log('❌ User already exists:', emailLower);
       return res.status(400).json({
         success: false,
         message: 'User already exists',
       });
     }
 
-    console.log('🔐 Hashing password...');
-    // Hash password
+    console.log('🔒 Hashing password...');
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     console.log('✅ Password hashed successfully');
@@ -48,7 +49,7 @@ export const register = async (req, res) => {
     console.log('💾 Creating user in database...');
     const user = await User.create({
       name,
-      email,
+      email: emailLower,
       password: hashedPassword,
     });
 
@@ -80,9 +81,11 @@ export const register = async (req, res) => {
 // @access  Public
 export const login = async (req, res) => {
   try {
-    console.log('🔐 LOGIN ROUTE HIT');
+    console.log('\n========================================');
+    console.log('🔑 LOGIN ROUTE HIT');
+    console.log('========================================');
     console.log('📦 Request Body:', req.body);
-    
+
     const { email, password } = req.body;
 
     // Validation
@@ -94,36 +97,44 @@ export const login = async (req, res) => {
       });
     }
 
-    console.log('🔍 Searching for user:', email);
+    const emailLower = email.toLowerCase();
+
     // Check for user
-    const user = await User.findOne({ email });
-    
+    const user = await User.findOne({ email: emailLower });
+
     if (!user) {
-      console.log('❌ User NOT found in database:', email);
+      console.log('❌ User NOT found in database:', emailLower);
+      console.log('========================================\n');
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials',
+        message: 'Invalid credentials - User not found',
       });
     }
 
-    console.log('✅ User found:', user.email);
-    console.log('🔑 Stored password (hashed):', user.password.substring(0, 20) + '...');
-    console.log('🔑 Input password length:', password.length);
+    console.log('✅ User found in database!');
+    console.log('   User ID:', user._id);
+    console.log('   User Email:', user.email);
 
     // Check password
-    console.log('🔐 Comparing passwords...');
     const isPasswordMatch = await bcrypt.compare(password, user.password);
-    console.log('🔐 Password match result:', isPasswordMatch);
-    
+    console.log('🔍 Password match result:', isPasswordMatch);
+
     if (!isPasswordMatch) {
       console.log('❌ Password does NOT match');
+      console.log('========================================\n');
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials',
+        message: 'Invalid credentials - Wrong password',
       });
     }
 
+    console.log('✅ Password matches! Generating token...');
+    const token = generateToken(user._id);
+    console.log('✅ Token generated:', token.substring(0, 20) + '...');
+
     console.log('✅ Login successful for:', user.email);
+    console.log('========================================\n');
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -131,11 +142,14 @@ export const login = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        token: generateToken(user._id),
+        role: user.role || 'customer',
+        token: token,
       },
     });
   } catch (error) {
     console.error('❌ Login Error:', error);
+    console.error('Error Stack:', error.stack);
+    console.log('========================================\n');
     res.status(500).json({
       success: false,
       message: 'Server error during login',
@@ -151,9 +165,9 @@ export const getProfile = async (req, res) => {
   try {
     console.log('👤 GET PROFILE ROUTE HIT');
     console.log('🆔 User ID from token:', req.user?.id);
-    
+
     const user = await User.findById(req.user.id).select('-password');
-    
+
     if (!user) {
       console.log('❌ User not found:', req.user.id);
       return res.status(404).json({
