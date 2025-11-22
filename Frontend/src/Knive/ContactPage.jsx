@@ -65,7 +65,7 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:from-gray-900 dark:to-gray-800 flex flex-col items-center justify-center py-20 px-6 transition-colors duration-500">
+    <div className="min-h-screen dark:from-gray-900 dark:to-gray-800 flex flex-col items-center justify-center py-20 px-6 transition-colors duration-500">
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

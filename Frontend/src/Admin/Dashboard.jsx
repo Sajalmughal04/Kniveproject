@@ -2,9 +2,11 @@
 import React from 'react';
 import { Package, ShoppingCart, Users, RefreshCw, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logout as userLogout } from '../Redux/slice/authSlice.js';
 import StatsCard from './StatsCard';
 
-export default function Dashboard({ stats, products, orders }) {
+export default function Dashboard({ stats = {}, products = [], orders = [] }) {
   const navigate = useNavigate();
   
   // Get admin data from localStorage
@@ -14,39 +16,51 @@ export default function Dashboard({ stats, products, orders }) {
   }, []);
 
   // ✅ Logout Function
+  const dispatch = useDispatch();
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
+      // Clear admin-only storage
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminData');
-      navigate('/admin/login', { replace: true });
+
+      // Also clear global user auth (so admin logout signs out whole app)
+      try {
+        dispatch(userLogout());
+      } catch (err) {
+        // dispatch may not be available in some test contexts — fallback
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
+
+      navigate('/', { replace: true });
     }
   };
 
   const statsData = [
     { 
       label: 'Total Products', 
-      value: stats.totalProducts, 
+      value: stats?.totalProducts ?? 0, 
       icon: Package, 
       gradient: 'from-blue-500 to-blue-600', 
       textColor: 'text-blue-100' 
     },
     { 
       label: 'Total Orders', 
-      value: stats.totalOrders, 
+      value: stats?.totalOrders ?? 0, 
       icon: ShoppingCart, 
       gradient: 'from-green-500 to-green-600', 
       textColor: 'text-green-100' 
     },
     { 
       label: 'Total Customers', 
-      value: stats.totalCustomers, 
+      value: stats?.totalCustomers ?? 0, 
       icon: Users, 
       gradient: 'from-purple-500 to-purple-600', 
       textColor: 'text-purple-100' 
     },
     { 
       label: 'Total Revenue', 
-      value: `$${stats.revenue.toLocaleString()}`, 
+      value: `$${Number(stats?.revenue || 0).toLocaleString()}`, 
       icon: null, 
       gradient: 'from-orange-500 to-orange-600', 
       textColor: 'text-orange-100', 
