@@ -1,19 +1,24 @@
-// src/App.jsx - FULLY UPDATED VERSION (COMPLETE)
+// src/App.jsx - FIXED WITH PROPER IMPORTS
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import { store } from "./Redux/store.js";
 import { selectToast, clearToast } from "./Redux/slice/cartSlice.js";
 import { motion, AnimatePresence } from "framer-motion";
+
+// ✅ Import Components
 import Navbar from "./Knive/Navbar";
 import Footer from "./Knive/Footer";
 import WhatsAppButton from "./Knive/WhatsappButton";
 import { WishlistProvider } from "./Knive/WishlistContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
 
-// ✅ User pages
+// 🔐 Import Admin Protected Route from separate file
+import ProtectedRoute from "./Admin/ProtectedRoute.jsx"; // ✅ Admin protection
+import UserProtectedRoute from "./Knive/UserProtectedRoute.jsx"; // ✅ User protection
+
+// ✅ Lazy load pages
 const ShopPage = lazy(() => import("./Knive/ShopPage.jsx"));
 const CategoryPage = lazy(() => import("./Knive/CategoryPage.jsx"));
 const AllCategoriesPage = lazy(() => import("./Knive/AllCategoriesPage.jsx"));
@@ -30,12 +35,10 @@ const FAQs = lazy(() => import("./Knive/FAQS.jsx"));
 const Wishlist = lazy(() => import("./Knive/Wishlist.jsx"));
 const OrderTrackingPage = lazy(() => import("./Knive/OrderTrackingPage.jsx"));
 const ReviewPage = lazy(() => import("./Knive/ReviewPage.jsx"));
-
-// ✅ Admin pages - PROPERLY IMPORTED
 const Dashboard = lazy(() => import("./Admin/Dashboard.jsx"));
 const AdminPanel = lazy(() => import("./Admin/AdminPanel.jsx"));
 
-// ✅ Loading Spinner Component
+// ✅ Loading Spinner
 function LoadingSpinner() {
   return (
     <div className="flex justify-center items-center h-[500px]">
@@ -49,7 +52,7 @@ function LoadingSpinner() {
   );
 }
 
-// ✅ Scroll To Top Component
+// ✅ Scroll To Top
 function ScrollToTop() {
   const { pathname } = useLocation();
   
@@ -60,7 +63,7 @@ function ScrollToTop() {
   return null;
 }
 
-// ✅ Redux Cart Toast Notification Component
+// ✅ Redux Toast
 function ReduxToast() {
   const toast = useSelector(selectToast);
   const dispatch = useDispatch();
@@ -93,84 +96,80 @@ function ReduxToast() {
   );
 }
 
-// ✅ Protected User Route - NOW USING REDUX
-function ProtectedRoute({ children }) {
-  const location = useLocation();
-  const { isAuthenticated, user } = useSelector((state) => state.auth || {});
-  
-  // ✅ If user is admin, don't allow access to user routes
-  if (isAuthenticated && user?.role === 'admin') {
-    return <Navigate to="/Dashboard" replace />;
-  }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  }
-  
-  return children;
-}
+// 🚫 Unauthorized Page
+function UnauthorizedPage() {
+  const navigate = (path) => {
+    window.location.href = path;
+  };
 
-// 🔐 Admin Protected Route - SIMPLIFIED
-function AdminProtectedRoute({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminData');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userData');
+    navigate('/login');
+  };
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('adminToken');
-      
-      if (!token) {
-        console.log('❌ No admin token found');
-        setIsAuthenticated(false);
-        return;
-      }
-
-      try {
-        console.log('🔍 Verifying admin token...');
-        const response = await axios.get('http://localhost:3000/api/admin/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (response.data.success) {
-          console.log('✅ Admin verified!');
-          setIsAuthenticated(true);
-        } else {
-          console.log('❌ Invalid admin token');
-          localStorage.removeItem('adminToken');
-          localStorage.removeItem('adminData');
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error('❌ Admin verification failed:', error);
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminData');
-        setIsAuthenticated(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  if (isAuthenticated === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mx-auto"></div>
-          <p className="text-white mt-4 text-lg">Verifying Admin Access...</p>
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-gray-800 rounded-lg shadow-2xl p-8 text-center">
+        <div className="mb-6">
+          <div className="w-24 h-24 mx-auto bg-red-500/20 rounded-full flex items-center justify-center">
+            <svg 
+              className="w-12 h-12 text-red-500" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+              />
+            </svg>
+          </div>
         </div>
+
+        <h1 className="text-3xl font-bold text-white mb-3">
+          Access Denied
+        </h1>
+
+        <p className="text-gray-300 mb-2">
+          You don't have permission to access this area.
+        </p>
+        
+        <p className="text-gray-400 text-sm mb-6">
+          This page is restricted to administrators only.
+        </p>
+
+        <div className="border-t border-gray-700 my-6"></div>
+
+        <div className="space-y-3">
+          <button
+            onClick={() => navigate('/')}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-lg transition duration-200 transform hover:scale-105"
+          >
+            Go to Home
+          </button>
+          
+          <button
+            onClick={handleLogout}
+            className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+          >
+            Logout
+          </button>
+        </div>
+
+        <p className="text-gray-500 text-xs mt-6">
+          If you believe this is an error, please contact support.
+        </p>
       </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    console.log('🚫 Admin not authenticated, redirecting to login');
-    return <Navigate to="/login" replace />;
-  }
-
-  console.log('✅ Admin authenticated, showing dashboard');
-  return children;
+    </div>
+  );
 }
 
-// ✅ User Layout - NOW USING REDUX
+// ✅ User Layout
 function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
@@ -216,6 +215,7 @@ function UserLayout() {
             <Route path="/faq" element={<FAQs />} />
             <Route path="/track-order" element={<OrderTrackingPage />} />
             
+            {/* Login/Register Routes */}
             <Route 
               path="/login" 
               element={
@@ -243,23 +243,28 @@ function UserLayout() {
             
             <Route path="/payment-success" element={<PaymentSuccess />} />
             
+            {/* Protected User Routes */}
             <Route 
               path="/checkout" 
               element={
-                <ProtectedRoute>
+                <UserProtectedRoute>
                   <CheckoutPage />
-                </ProtectedRoute>
+                </UserProtectedRoute>
               } 
             />
             <Route 
               path="/profile" 
               element={
-                <ProtectedRoute>
+                <UserProtectedRoute>
                   <ProfilePage />
-                </ProtectedRoute>
+                </UserProtectedRoute>
               } 
             />
 
+            {/* Unauthorized Route */}
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+            {/* 404 Not Found */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -286,7 +291,7 @@ function UserLayout() {
   );
 }
 
-// ✅ 404 Not Found Component
+// ✅ 404 Not Found
 function NotFound() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-6">
@@ -306,37 +311,36 @@ function NotFound() {
   );
 }
 
-// ✅ Main App - FIXED ADMIN ROUTING
+// ✅ Main App Component
 export default function App() {
   return (
     <Provider store={store}>
       <Router>
         <Routes>
-          {/* ✅ Admin Dashboard Route - NOW PROTECTED */}
+          {/* 🔐 Admin Routes - Using ProtectedRoute component */}
           <Route 
             path="/Dashboard" 
             element={
-              <AdminProtectedRoute>
+              <ProtectedRoute>
                 <Suspense fallback={<LoadingSpinner />}>
                   <Dashboard />
                 </Suspense>
-              </AdminProtectedRoute>
+              </ProtectedRoute>
             } 
           />
           
-          {/* ✅ Admin Panel Route - Already Protected */}
           <Route 
             path="/admin/*" 
             element={
-              <AdminProtectedRoute>
+              <ProtectedRoute>
                 <Suspense fallback={<LoadingSpinner />}>
                   <AdminPanel />
                 </Suspense>
-              </AdminProtectedRoute>
+              </ProtectedRoute>
             } 
           />
 
-          {/* User Routes */}
+          {/* 👤 User Routes */}
           <Route 
             path="/*" 
             element={

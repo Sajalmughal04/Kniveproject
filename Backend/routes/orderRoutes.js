@@ -9,7 +9,7 @@ import {
   deleteOrder,
   getOrderStats
 } from '../controllers/orderController.js';
-import { protectUser } from '../Middleware/authMiddleware.js'; // ✅ FIXED: Changed from { protect } to { protectUser }
+import { protectAdmin } from '../Middleware/authMiddleware.js'; // ✅ Admin-only protection
 
 const router = express.Router();
 
@@ -17,11 +17,11 @@ const router = express.Router();
 router.post('/', createOrder);
 router.get('/email/:email', getOrdersByEmail);
 
-// Protected routes (Admin only)
-router.get('/', protectUser, getAllOrders); // ✅ FIXED: Changed from protect to protectUser
-router.get('/stats', protectUser, getOrderStats); // ✅ FIXED: Changed from protect to protectUser
-router.get('/:id', protectUser, getOrderById); // ✅ FIXED: Changed from protect to protectUser
-router.put('/:id', protectUser, updateOrderStatus); // ✅ FIXED: Changed from protect to protectUser
-router.delete('/:id', protectUser, deleteOrder); // ✅ FIXED: Changed from protect to protectUser
+// Protected routes (Admin only) - Order matters: specific routes before generic ones
+router.get('/stats', protectAdmin, getOrderStats); // ✅ Admin-only access
+router.get('/', protectAdmin, getAllOrders); // ✅ Admin-only access - must come after /stats
+router.get('/:id', protectAdmin, getOrderById); // ✅ Admin-only access
+router.put('/:id', protectAdmin, updateOrderStatus); // ✅ Admin-only access
+router.delete('/:id', protectAdmin, deleteOrder); // ✅ Admin-only access
 
 export default router;

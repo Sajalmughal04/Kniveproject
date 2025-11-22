@@ -9,7 +9,7 @@ import {
   deleteProduct,
   uploadProductImage
 } from "../controllers/productController.js";
-import { protectUser } from "../Middleware/authMiddleware.js"; // ✅ FIXED: Changed from { protect } to { protectUser }
+import { protectAdmin } from "../Middleware/authMiddleware.js"; // ✅ Admin-only protection
 
 const router = express.Router();
 
@@ -21,7 +21,7 @@ router.get("/:id", getProductById);
 // Create product with image upload
 router.post(
   "/", 
-  protectUser, // ✅ FIXED: Changed from protect to protectUser
+  protectAdmin, // ✅ Admin-only access
   upload.single('image'), 
   createProduct
 );
@@ -29,7 +29,7 @@ router.post(
 // Update product with optional image upload
 router.put(
   "/:id", 
-  protectUser, // ✅ FIXED: Changed from protect to protectUser
+  protectAdmin, // ✅ Admin-only access
   upload.single('image'), 
   updateProduct
 );
@@ -37,14 +37,14 @@ router.put(
 // Delete product
 router.delete(
   "/:id", 
-  protectUser, // ✅ FIXED: Changed from protect to protectUser
+  protectAdmin, // ✅ Admin-only access
   deleteProduct
 );
 
 // ✅ Separate endpoint for image upload (optional - if you want to upload images separately)
 router.post(
   "/upload/image",
-  protectUser, // ✅ FIXED: Changed from protect to protectUser
+  protectAdmin, // ✅ Admin-only access
   upload.single('image'),
   uploadProductImage
 );

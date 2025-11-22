@@ -1,10 +1,11 @@
 import express from "express";
 import * as customerController from "../controllers/customerController.js";
-import { protect } from "../Middleware/authMiddleware.js"; // note: lowercase 'm' in middleware
+import { protectAdmin } from "../Middleware/authMiddleware.js"; // ✅ Admin-only protection
 
 const router = express.Router();
 
-router.get("/", protect, customerController.getCustomers);
-router.get("/:id", protect, customerController.getCustomer);
+// ✅ Protected routes (Admin only)
+router.get("/", protectAdmin, customerController.getCustomers);
+router.get("/:id", protectAdmin, customerController.getCustomer);
 
 export default router;

@@ -1,4 +1,4 @@
-// src/components/admin/dashboard/Dashboard.jsx
+// src/components/admin/dashboard/Dashboard.jsx - FORCED LOGOUT FIX
 import React from 'react';
 import { Package, ShoppingCart, Users, RefreshCw, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,7 @@ import StatsCard from './StatsCard';
 
 export default function Dashboard({ stats = {}, products = [], orders = [] }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   
   // Get admin data from localStorage
   const adminData = React.useMemo(() => {
@@ -15,25 +16,60 @@ export default function Dashboard({ stats = {}, products = [], orders = [] }) {
     return data ? JSON.parse(data) : { name: 'Admin', email: '' };
   }, []);
 
-  // ✅ Logout Function
-  const dispatch = useDispatch();
+  // ✅ NUCLEAR OPTION - Complete Logout
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      // Clear admin-only storage
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminData');
-
-      // Also clear global user auth (so admin logout signs out whole app)
-      try {
-        dispatch(userLogout());
-      } catch (err) {
-        // dispatch may not be available in some test contexts — fallback
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-      }
-
-      navigate('/', { replace: true });
+    console.log('👋 ========================================');
+    console.log('👋 ADMIN LOGOUT INITIATED');
+    console.log('👋 ========================================');
+    
+    // Log current state
+    console.log('📊 BEFORE LOGOUT:');
+    console.log('  adminToken:', localStorage.getItem('adminToken') ? 'EXISTS' : 'NONE');
+    console.log('  token:', localStorage.getItem('token') ? 'EXISTS' : 'NONE');
+    console.log('  All keys:', Object.keys(localStorage));
+    
+    // NUCLEAR CLEAR - Remove EVERYTHING
+    console.log('🗑️ CLEARING ALL STORAGE...');
+    
+    const keysToRemove = [
+      'adminToken',
+      'adminData', 
+      'token',
+      'userData',
+      'user',
+      'auth',
+      'persist:root'
+    ];
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      console.log(`  ✓ Removed: ${key}`);
+    });
+    
+    // Verify everything is cleared
+    console.log('📊 AFTER CLEARING:');
+    console.log('  adminToken:', localStorage.getItem('adminToken'));
+    console.log('  token:', localStorage.getItem('token'));
+    console.log('  Remaining keys:', Object.keys(localStorage));
+    
+    // Clear Redux
+    console.log('🔄 Dispatching Redux logout...');
+    try {
+      dispatch(userLogout());
+      console.log('  ✓ Redux cleared');
+    } catch (err) {
+      console.error('  ✗ Redux error:', err);
     }
+    
+    console.log('👋 ========================================');
+    console.log('👋 LOGOUT COMPLETE');
+    console.log('👋 REDIRECTING TO HOME...');
+    console.log('👋 ========================================');
+    
+    // Force redirect
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
   };
 
   const statsData = [
@@ -97,14 +133,14 @@ export default function Dashboard({ stats = {}, products = [], orders = [] }) {
             <span className="hidden md:inline">Refresh</span>
           </button>
 
-          {/* Logout Button */}
+          {/* LOGOUT BUTTON - NO CONFIRMATION, IMMEDIATE ACTION */}
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
-            title="Logout"
+            className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-bold"
+            title="Logout Immediately"
           >
-            <LogOut size={18} />
-            <span className="hidden md:inline">Logout</span>
+            <LogOut size={20} className="font-bold" />
+            <span className="hidden md:inline">LOGOUT</span>
           </button>
         </div>
       </div>

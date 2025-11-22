@@ -2,6 +2,7 @@ import express from "express";
 import Stripe from "stripe";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import { protectAdmin } from "../Middleware/authMiddleware.js";
 
 const router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -230,8 +231,8 @@ router.get("/payment-status/:paymentIntentId", async (req, res) => {
   }
 });
 
-// Refund Payment
-router.post("/refund", async (req, res) => {
+// Refund Payment (Admin only)
+router.post("/refund", protectAdmin, async (req, res) => {
   try {
     const { paymentIntentId, amount, reason } = req.body;
 

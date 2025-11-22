@@ -1,4 +1,4 @@
-// src/Knive/LoginPage.jsx - FULLY UPDATED VERSION
+// src/Knive/LoginPage.jsx - FIXED VERSION
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -85,9 +85,9 @@ const LoginPage = () => {
           // Show admin welcome message
           dispatch(showToast(`Welcome Admin, ${userData.name}! 👑`));
           
-          // ✅ FIXED: Navigate to correct path (/Dashboard instead of /Admin)
-          console.log('🔄 Navigating to /Dashboard...');
-          navigate('/Dashboard', { replace: true });
+          // ✅ FIXED: Navigate to /admin/dashboard (with sidebar layout)
+          console.log('🔄 Navigating to /admin/dashboard...');
+          navigate('/admin/dashboard', { replace: true });
           
           return;
         }

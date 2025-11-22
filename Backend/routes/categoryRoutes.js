@@ -7,7 +7,7 @@ import {
   updateCategory,
   deleteCategory,
 } from "../controllers/categoryController.js";
-import { protectUser } from "../Middleware/authMiddleware.js"; // ✅ FIXED: Changed from { protect } to { protectUser }
+import { protectAdmin } from "../Middleware/authMiddleware.js"; // ✅ Admin-only protection
 
 const router = express.Router();
 
@@ -16,8 +16,8 @@ router.get("/", getAllCategories);
 router.get("/:slug", getCategoryBySlug);
 
 // ✅ Protected routes (Admin only)
-router.post("/", protectUser, createCategory); // ✅ FIXED: Changed from protect to protectUser
-router.put("/:id", protectUser, updateCategory); // ✅ FIXED: Changed from protect to protectUser
-router.delete("/:id", protectUser, deleteCategory); // ✅ FIXED: Changed from protect to protectUser
+router.post("/", protectAdmin, createCategory); // ✅ Admin-only access
+router.put("/:id", protectAdmin, updateCategory); // ✅ Admin-only access
+router.delete("/:id", protectAdmin, deleteCategory); // ✅ Admin-only access
 
 export default router;
