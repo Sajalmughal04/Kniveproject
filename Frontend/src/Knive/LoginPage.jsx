@@ -1,4 +1,4 @@
-// src/Knive/LoginPage.jsx - FIXED VERSION
+// src/Knive/LoginPage.jsx - WITH UNIQUE SESSION ID
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,13 +48,17 @@ const LoginPage = () => {
     dispatch(loginStart());
 
     try {
-      console.log('🔐 Sending login request...');
+      console.log('🔐 ========================================');
+      console.log('🔐 LOGIN ATTEMPT STARTED');
+      console.log('🔐 Email:', formData.email);
+      console.log('🔐 ========================================');
+      
       const response = await axios.post(`${API_URL}/login`, {
         email: formData.email,
         password: formData.password,
       });
 
-      console.log('✅ Login response:', response.data);
+      console.log('✅ Login response received:', response.data);
 
       if (response.data.success) {
         const token = response.data.data.token;
@@ -68,51 +72,72 @@ const LoginPage = () => {
           role: response.data.data.role || 'customer',
         };
 
+        console.log('👤 User data received:');
+        console.log('   Name:', userData.name);
+        console.log('   Email:', userData.email);
+        console.log('   Role:', userData.role);
+
         // ✅ CHECK IF USER IS ADMIN
         if (userData.role === 'admin') {
-          console.log('👑 Admin detected! Redirecting to admin dashboard...');
+          console.log('👑 ========================================');
+          console.log('👑 ADMIN LOGIN DETECTED');
+          console.log('👑 ========================================');
           
-          // Save admin token in localStorage
+          // 🔑 GENERATE UNIQUE TAB ID
+          const tabId = sessionStorage.getItem('currentTabId') || `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          sessionStorage.setItem('currentTabId', tabId);
+          console.log('🆔 Current Tab ID:', tabId);
+          
+          // Clear old admin session
+          console.log('🗑️ Clearing any old admin session...');
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminData');
+          localStorage.removeItem('authorizedAdminTab');
+          localStorage.removeItem('token');
+          localStorage.removeItem('userData');
+          
+          // Save NEW admin session with THIS tab authorized
+          console.log('💾 Saving new admin session...');
           localStorage.setItem('adminToken', token);
           localStorage.setItem('adminData', JSON.stringify(userData));
+          localStorage.setItem('authorizedAdminTab', tabId);
+          console.log('✅ Tab authorized:', tabId);
           
-          // ✅ IMPORTANT: Dispatch Redux state for admin too
+          // Dispatch Redux
           dispatch(loginSuccess({ user: userData, token }));
           
           // Clear form
           setFormData({ email: "", password: "" });
           
-          // Show admin welcome message
+          // Show success message
           dispatch(showToast(`Welcome Admin, ${userData.name}! 👑`));
           
-          // ✅ FIXED: Navigate to /admin/dashboard (with sidebar layout)
-          console.log('🔄 Navigating to /admin/dashboard...');
-          navigate('/admin/dashboard', { replace: true });
+          console.log('✅ ADMIN LOGIN COMPLETE');
+          
+          setTimeout(() => {
+            navigate('/admin/dashboard', { replace: true });
+          }, 100);
           
           return;
         }
 
-        // ✅ Regular user login flow
+        // REGULAR USER LOGIN
+        console.log('👤 REGULAR USER LOGIN');
+        
         dispatch(loginSuccess({ user: userData, token }));
-        
-        console.log('💾 Profile saved via Redux:', userData);
-        
-        // Clear form
         setFormData({ email: "", password: "" });
-        
-        // Show welcome message
         dispatch(showToast(`Welcome back, ${userData.name}! 🎉`));
         
-        // Navigate to intended page
-        console.log('🏠 Redirecting to:', from);
-        navigate(from, { replace: true });
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 100);
         
       } else {
+        console.log('❌ Login failed');
         dispatch(loginFailure("Login failed. Please try again."));
       }
     } catch (err) {
-      console.error('❌ Login error:', err);
-      console.error('Error response:', err.response?.data);
+      console.error('❌ LOGIN ERROR:', err.message);
       
       let errorMessage = "An error occurred. Please try again.";
       

@@ -1,6 +1,6 @@
-// src/Admin/ProtectedRoute.jsx - VISITOR BLOCKING FIX
+// src/Admin/ProtectedRoute.jsx - TAB-SPECIFIC SESSION SECURITY
 import { Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
 
@@ -9,206 +9,286 @@ const ProtectedRoute = ({ children }) => {
     isAuthenticated: null,
     isAdmin: null,
     isLoading: true,
-    userRole: null
+    userRole: null,
+    tabAuthorized: null
   });
 
+  const hasVerified = useRef(false);
+  const tabIdRef = useRef(null);
   const reduxAuth = useSelector((state) => state.auth || {});
 
   useEffect(() => {
-    console.log('🔐 ProtectedRoute: Starting verification...');
+    if (hasVerified.current) {
+      console.log('⏭️ Already verified, skipping...');
+      return;
+    }
+
+    const verifyUserAccess = async () => {
+      try {
+        console.log('🔐 ========================================');
+        console.log('🔐 PROTECTED ROUTE: VERIFICATION STARTED');
+        console.log('🔐 ========================================');
+        
+        // 🆔 STEP 1: Generate or get tab-specific ID
+        if (!tabIdRef.current) {
+          tabIdRef.current = sessionStorage.getItem('currentTabId');
+          if (!tabIdRef.current) {
+            tabIdRef.current = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            sessionStorage.setItem('currentTabId', tabIdRef.current);
+          }
+        }
+        
+        console.log('🆔 Current Tab ID:', tabIdRef.current);
+        
+        const adminToken = localStorage.getItem('adminToken');
+        const userToken = localStorage.getItem('token');
+        const adminData = localStorage.getItem('adminData');
+        const authorizedTabId = localStorage.getItem('authorizedAdminTab');
+
+        console.log('🔍 Step 2: Checking tokens and authorization...');
+        console.log('   Admin Token:', adminToken ? 'EXISTS ✅' : 'MISSING ❌');
+        console.log('   User Token:', userToken ? 'EXISTS ✅' : 'MISSING ❌');
+        console.log('   Admin Data:', adminData ? 'EXISTS ✅' : 'MISSING ❌');
+        console.log('   Authorized Tab:', authorizedTabId || 'NONE');
+        console.log('   Current Tab:', tabIdRef.current);
+
+        // 🚫 CHECK 1: NO TOKENS AT ALL
+        if (!adminToken && !userToken) {
+          console.log('❌ ========================================');
+          console.log('❌ ACCESS DENIED: NO TOKENS FOUND');
+          console.log('❌ This is a VISITOR/GUEST');
+          console.log('❌ Showing 404 page');
+          console.log('❌ ========================================');
+          
+          setAuthState({
+            isAuthenticated: false,
+            isAdmin: false,
+            isLoading: false,
+            userRole: 'guest',
+            tabAuthorized: false
+          });
+          hasVerified.current = true;
+          return;
+        }
+
+        // 🚫 CHECK 2: Redux shows regular user
+        if (reduxAuth.isAuthenticated && reduxAuth.user?.role === 'user') {
+          console.log('❌ ========================================');
+          console.log('❌ ACCESS DENIED: REGULAR USER');
+          console.log('❌ Showing 404 page');
+          console.log('❌ ========================================');
+          
+          setAuthState({
+            isAuthenticated: false,
+            isAdmin: false,
+            isLoading: false,
+            userRole: 'user',
+            tabAuthorized: false
+          });
+          hasVerified.current = true;
+          return;
+        }
+
+        // 🚫 CHECK 3: Only user token (no admin token)
+        if (!adminToken && userToken) {
+          console.log('❌ ========================================');
+          console.log('❌ ACCESS DENIED: ONLY USER TOKEN');
+          console.log('❌ Showing 404 page');
+          console.log('❌ ========================================');
+          
+          setAuthState({
+            isAuthenticated: true,
+            isAdmin: false,
+            isLoading: false,
+            userRole: 'user',
+            tabAuthorized: false
+          });
+          hasVerified.current = true;
+          return;
+        }
+
+        // 🚫 CHECK 4: Customer role
+        if (reduxAuth.user?.role === 'customer') {
+          console.log('❌ ========================================');
+          console.log('❌ ACCESS DENIED: CUSTOMER ROLE');
+          console.log('❌ Showing 404 page');
+          console.log('❌ ========================================');
+          
+          setAuthState({
+            isAuthenticated: true,
+            isAdmin: false,
+            isLoading: false,
+            userRole: 'customer',
+            tabAuthorized: false
+          });
+          hasVerified.current = true;
+          return;
+        }
+
+        // 🔑 CHECK 5: THIS IS THE KEY CHECK - TAB AUTHORIZATION
+        if (authorizedTabId && authorizedTabId !== tabIdRef.current) {
+          console.log('❌ ========================================');
+          console.log('❌ ACCESS DENIED: WRONG TAB/WINDOW');
+          console.log('❌ Admin is logged in ANOTHER tab/window');
+          console.log('❌ Authorized Tab:', authorizedTabId);
+          console.log('❌ Current Tab:', tabIdRef.current);
+          console.log('❌ This tab is NOT authorized');
+          console.log('❌ Showing 404 page');
+          console.log('❌ ========================================');
+          
+          setAuthState({
+            isAuthenticated: false,
+            isAdmin: false,
+            isLoading: false,
+            userRole: 'unauthorized_tab',
+            tabAuthorized: false
+          });
+          hasVerified.current = true;
+          return;
+        }
+
+        // ✅ CHECK 6: Verify with backend
+        console.log('🔄 ========================================');
+        console.log('🔄 Step 3: Admin token found!');
+        console.log('🔄 Verifying with backend API...');
+        console.log('🔄 ========================================');
+        
+        const response = await axios.get('http://localhost:3000/api/admin/profile', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          },
+          timeout: 5000
+        });
+
+        console.log('📥 Backend response received:', response.data);
+
+        let userRole = null;
+        let userEmail = null;
+        
+        if (response.data.success) {
+          userRole = 
+            response.data.data?.role ||
+            response.data.admin?.role ||
+            response.data.user?.role ||
+            response.data.role;
+            
+          userEmail = 
+            response.data.data?.email ||
+            response.data.admin?.email ||
+            response.data.user?.email ||
+            response.data.email;
+        }
+
+        console.log('👤 User info from backend:');
+        console.log('   Role:', userRole);
+        console.log('   Email:', userEmail);
+
+        // ✅ FINAL CHECK: Is user admin AND tab authorized?
+        if (userRole === 'admin') {
+          // If no authorized tab yet, authorize THIS tab
+          if (!authorizedTabId) {
+            console.log('🔓 No authorized tab found - authorizing THIS tab');
+            localStorage.setItem('authorizedAdminTab', tabIdRef.current);
+          }
+
+          console.log('✅ ========================================');
+          console.log('✅ ADMIN VERIFIED SUCCESSFULLY');
+          console.log('✅ Admin email:', userEmail);
+          console.log('✅ Admin role:', userRole);
+          console.log('✅ This tab is AUTHORIZED');
+          console.log('✅ GRANTING ACCESS');
+          console.log('✅ ========================================');
+          
+          setAuthState({
+            isAuthenticated: true,
+            isAdmin: true,
+            isLoading: false,
+            userRole: 'admin',
+            tabAuthorized: true
+          });
+          hasVerified.current = true;
+        } else {
+          console.log('❌ ========================================');
+          console.log('❌ ACCESS DENIED: NOT AN ADMIN');
+          console.log('❌ Clearing tokens...');
+          console.log('❌ Showing 404 page');
+          console.log('❌ ========================================');
+          
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminData');
+          localStorage.removeItem('authorizedAdminTab');
+          
+          setAuthState({
+            isAuthenticated: false,
+            isAdmin: false,
+            isLoading: false,
+            userRole: userRole || 'unknown',
+            tabAuthorized: false
+          });
+          hasVerified.current = true;
+        }
+
+      } catch (error) {
+        console.error('❌ ========================================');
+        console.error('❌ VERIFICATION ERROR');
+        console.error('❌ Error:', error.message);
+        console.error('❌ Clearing tokens...');
+        console.error('❌ Showing 404 page');
+        console.error('❌ ========================================');
+
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminData');
+        localStorage.removeItem('authorizedAdminTab');
+        
+        setAuthState({
+          isAuthenticated: false,
+          isAdmin: false,
+          isLoading: false,
+          userRole: 'error',
+          tabAuthorized: false
+        });
+        hasVerified.current = true;
+      }
+    };
+
     verifyUserAccess();
   }, []);
 
-  const verifyUserAccess = async () => {
-    try {
-      console.log('🔍 Step 1: Checking tokens...');
-      
-      // Get tokens from localStorage
-      const adminToken = localStorage.getItem('adminToken');
-      const userToken = localStorage.getItem('token');
-
-      console.log('🔑 Admin Token:', adminToken ? 'FOUND ✅' : 'NOT FOUND ❌');
-      console.log('🔑 User Token:', userToken ? 'FOUND ✅' : 'NOT FOUND ❌');
-      console.log('📊 Redux Auth:', reduxAuth);
-      console.log('📊 Redux User Role:', reduxAuth.user?.role);
-
-      // 🚫 CHECK 1: NO TOKENS AT ALL (Visitor/Guest)
-      if (!adminToken && !userToken) {
-        console.log('❌ ========================================');
-        console.log('❌ NO TOKENS FOUND - VISITOR/GUEST USER');
-        console.log('❌ Blocking access to admin area');
-        console.log('❌ ========================================');
-        
-        setAuthState({
-          isAuthenticated: false,
-          isAdmin: false,
-          isLoading: false,
-          userRole: 'guest'
-        });
-        return;
-      }
-
-      // 🚫 CHECK 2: Redux shows regular user is logged in
-      if (reduxAuth.isAuthenticated && reduxAuth.user?.role === 'user') {
-        console.log('❌ ========================================');
-        console.log('❌ REGULAR USER DETECTED FROM REDUX');
-        console.log('❌ User role:', reduxAuth.user.role);
-        console.log('❌ Blocking admin access');
-        console.log('❌ ========================================');
-        
-        setAuthState({
-          isAuthenticated: false,
-          isAdmin: false,
-          isLoading: false,
-          userRole: 'user'
-        });
-        return;
-      }
-
-      // 🚫 CHECK 3: Only user token exists (no admin token)
-      if (!adminToken && userToken) {
-        console.log('❌ ========================================');
-        console.log('❌ ONLY USER TOKEN FOUND');
-        console.log('❌ This is a regular user, not admin');
-        console.log('❌ Blocking admin access');
-        console.log('❌ ========================================');
-        
-        setAuthState({
-          isAuthenticated: true,
-          isAdmin: false,
-          isLoading: false,
-          userRole: 'user'
-        });
-        return;
-      }
-
-      // 🚫 CHECK 4: Redux shows customer
-      if (reduxAuth.user?.role === 'customer') {
-        console.log('❌ ========================================');
-        console.log('❌ CUSTOMER ROLE DETECTED');
-        console.log('❌ Blocking admin access');
-        console.log('❌ ========================================');
-        
-        setAuthState({
-          isAuthenticated: true,
-          isAdmin: false,
-          isLoading: false,
-          userRole: 'customer'
-        });
-        return;
-      }
-
-      // ✅ Admin token exists - Verify with backend
-      console.log('🔄 Step 2: Admin token found, verifying with backend...');
-      console.log('📡 Calling API: http://localhost:3000/api/admin/profile');
-      
-      const response = await axios.get('http://localhost:3000/api/admin/profile', {
-        headers: {
-          'Authorization': `Bearer ${adminToken}`
-        }
-      });
-
-      console.log('📥 Backend Response:', response.data);
-
-      // Extract role from response
-      let userRole = null;
-      
-      if (response.data.success) {
-        userRole = 
-          response.data.data?.role ||
-          response.data.admin?.role ||
-          response.data.user?.role ||
-          response.data.role;
-      }
-
-      console.log('👤 User Role from backend:', userRole);
-
-      // ✅ Final Check: Is user actually admin?
-      if (userRole === 'admin') {
-        console.log('✅ ========================================');
-        console.log('✅ ADMIN VERIFIED SUCCESSFULLY');
-        console.log('✅ Granting access to admin dashboard');
-        console.log('✅ ========================================');
-        
-        setAuthState({
-          isAuthenticated: true,
-          isAdmin: true,
-          isLoading: false,
-          userRole: 'admin'
-        });
-      } else {
-        console.log('❌ ========================================');
-        console.log('❌ BACKEND VERIFICATION FAILED');
-        console.log('❌ Role is not admin:', userRole);
-        console.log('❌ Clearing invalid tokens...');
-        console.log('❌ ========================================');
-        
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminData');
-        
-        setAuthState({
-          isAuthenticated: false,
-          isAdmin: false,
-          isLoading: false,
-          userRole: userRole || 'unknown'
-        });
-      }
-
-    } catch (error) {
-      console.error('❌ ========================================');
-      console.error('❌ VERIFICATION ERROR');
-      console.error('❌ Error:', error.message);
-      console.error('❌ Error Response:', error.response?.data);
-      console.error('❌ Error Status:', error.response?.status);
-      console.error('❌ ========================================');
-
-      // If error (invalid/expired token), clear everything
-      console.log('🗑️ Clearing tokens due to error...');
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminData');
-      
-      setAuthState({
-        isAuthenticated: false,
-        isAdmin: false,
-        isLoading: false,
-        userRole: 'error'
-      });
-    }
-  };
-
-  // Loading state - Show for maximum 2 seconds
+  // Loading state
   if (authState.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white text-lg font-semibold">🔐 Verifying Admin Access...</p>
-          <p className="text-gray-400 text-sm mt-2">Please wait...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-yellow-500 mx-auto mb-6"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="animate-pulse text-2xl">🔐</div>
+            </div>
+          </div>
+          <p className="text-white text-xl font-bold mb-2">Verifying Access...</p>
+          <p className="text-gray-400 text-sm">Checking admin credentials</p>
         </div>
       </div>
     );
   }
 
-  // ❌ ACCESS DENIED - Show Unauthorized Page
-  if (!authState.isAuthenticated || !authState.isAdmin) {
+  // ❌ ACCESS DENIED
+  if (!authState.isAuthenticated || !authState.isAdmin || !authState.tabAuthorized) {
     console.log('🚫 ========================================');
-    console.log('🚫 ACCESS DENIED TO ADMIN DASHBOARD');
+    console.log('🚫 FINAL CHECK: ACCESS DENIED');
     console.log('🚫 Reason:');
-    console.log('🚫   - isAuthenticated:', authState.isAuthenticated);
-    console.log('🚫   - isAdmin:', authState.isAdmin);
-    console.log('🚫   - userRole:', authState.userRole);
-    console.log('🚫 Redirecting to /unauthorized');
+    console.log('   - isAuthenticated:', authState.isAuthenticated);
+    console.log('   - isAdmin:', authState.isAdmin);
+    console.log('   - tabAuthorized:', authState.tabAuthorized);
+    console.log('   - userRole:', authState.userRole);
+    console.log('🚫 REDIRECTING TO 404 PAGE');
     console.log('🚫 ========================================');
     
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/page-not-found-404" replace />;
   }
 
-  // ✅ ADMIN ACCESS GRANTED - Show Dashboard
-  console.log('✅ ========================================');
-  console.log('✅ ADMIN ACCESS GRANTED');
-  console.log('✅ Rendering Admin Dashboard');
-  console.log('✅ ========================================');
-  
+  // ✅ ADMIN ACCESS GRANTED
+  console.log('✅ RENDERING ADMIN DASHBOARD');
   return children;
 };
 

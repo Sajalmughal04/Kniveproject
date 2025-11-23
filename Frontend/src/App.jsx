@@ -1,4 +1,4 @@
-// src/App.jsx - FIXED WITH PROPER IMPORTS
+// src/App.jsx - WITH 404 FOR UNAUTHORIZED ADMIN ACCESS
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Provider, useSelector, useDispatch } from "react-redux";
@@ -6,7 +6,7 @@ import { store } from "./Redux/store.js";
 import { selectToast, clearToast } from "./Redux/slice/cartSlice.js";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ✅ Import Components
+// Components
 import Navbar from "./Knive/Navbar";
 import Footer from "./Knive/Footer";
 import WhatsAppButton from "./Knive/WhatsappButton";
@@ -14,11 +14,11 @@ import { WishlistProvider } from "./Knive/WishlistContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// 🔐 Import Admin Protected Route from separate file
-import ProtectedRoute from "./Admin/ProtectedRoute.jsx"; // ✅ Admin protection
-import UserProtectedRoute from "./Knive/UserProtectedRoute.jsx"; // ✅ User protection
+// Protected Routes
+import ProtectedRoute from "./Admin/ProtectedRoute.jsx";
+import UserProtectedRoute from "./Knive/UserProtectedRoute.jsx";
 
-// ✅ Lazy load pages
+// Lazy load pages
 const ShopPage = lazy(() => import("./Knive/ShopPage.jsx"));
 const CategoryPage = lazy(() => import("./Knive/CategoryPage.jsx"));
 const AllCategoriesPage = lazy(() => import("./Knive/AllCategoriesPage.jsx"));
@@ -38,7 +38,7 @@ const ReviewPage = lazy(() => import("./Knive/ReviewPage.jsx"));
 const Dashboard = lazy(() => import("./Admin/Dashboard.jsx"));
 const AdminPanel = lazy(() => import("./Admin/AdminPanel.jsx"));
 
-// ✅ Loading Spinner
+// Loading Spinner
 function LoadingSpinner() {
   return (
     <div className="flex justify-center items-center h-[500px]">
@@ -52,7 +52,7 @@ function LoadingSpinner() {
   );
 }
 
-// ✅ Scroll To Top
+// Scroll To Top
 function ScrollToTop() {
   const { pathname } = useLocation();
   
@@ -63,7 +63,7 @@ function ScrollToTop() {
   return null;
 }
 
-// ✅ Redux Toast
+// Redux Toast
 function ReduxToast() {
   const toast = useSelector(selectToast);
   const dispatch = useDispatch();
@@ -96,80 +96,143 @@ function ReduxToast() {
   );
 }
 
-// 🚫 Unauthorized Page
-function UnauthorizedPage() {
-  const navigate = (path) => {
-    window.location.href = path;
-  };
+// ❌ 404 NOT FOUND PAGE - COMPREHENSIVE
+function NotFound() {
+  const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminData');
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
-    navigate('/login');
-  };
+  useEffect(() => {
+    console.log('🚫 ========================================');
+    console.log('🚫 404 PAGE DISPLAYED');
+    console.log('🚫 Attempted URL:', location.pathname);
+    console.log('🚫 User Type: UNAUTHORIZED/VISITOR');
+    console.log('🚫 ========================================');
+  }, [location.pathname]);
 
+  // Detect if this is an admin route attempt
+  const isAdminRouteAttempt = location.pathname.toLowerCase().includes('admin') || 
+                               location.pathname.toLowerCase().includes('dashboard');
+
+  // Check if user tried to access admin without login
+  const hasNoToken = !localStorage.getItem('adminToken');
+  
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-gray-800 rounded-lg shadow-2xl p-8 text-center">
-        <div className="mb-6">
-          <div className="w-24 h-24 mx-auto bg-red-500/20 rounded-full flex items-center justify-center">
-            <svg 
-              className="w-12 h-12 text-red-500" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
-              />
-            </svg>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center px-4">
+      <div className="max-w-2xl w-full text-center">
+        {/* Animated 404 */}
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 mb-4">
+            {isAdminRouteAttempt ? '403' : '404'}
+          </h1>
+          <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto mb-8 rounded-full"></div>
+        </motion.div>
+
+        {/* Error Message */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <h2 className="text-4xl font-bold text-white mb-4">
+            {isAdminRouteAttempt 
+              ? (hasNoToken ? 'Access Denied' : 'Unauthorized Access') 
+              : 'Page Not Found'}
+          </h2>
+          <p className="text-gray-400 text-lg mb-2">
+            {isAdminRouteAttempt 
+              ? (hasNoToken 
+                  ? "You must be logged in as an administrator to access this area." 
+                  : "You don't have permission to access this page.")
+              : "The page you're looking for doesn't exist."}
+          </p>
+          {isAdminRouteAttempt && (
+            <p className="text-red-400 text-sm mb-4 font-semibold">
+              {hasNoToken 
+                ? '🔒 Admin login required' 
+                : '🔒 This area is restricted to authorized administrators only'}
+            </p>
+          )}
+          <p className="text-gray-500 text-sm mb-8">
+            URL: <span className="text-yellow-500 font-mono">{location.pathname}</span>
+          </p>
+        </motion.div>
+
+        {/* Illustration */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="mb-8"
+        >
+          <div className="w-48 h-48 mx-auto bg-gray-800/50 rounded-full flex items-center justify-center border-4 border-gray-700">
+            {isAdminRouteAttempt ? (
+              <svg className="w-24 h-24 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            ) : (
+              <svg className="w-24 h-24 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
           </div>
-        </div>
+        </motion.div>
 
-        <h1 className="text-3xl font-bold text-white mb-3">
-          Access Denied
-        </h1>
-
-        <p className="text-gray-300 mb-2">
-          You don't have permission to access this area.
-        </p>
-        
-        <p className="text-gray-400 text-sm mb-6">
-          This page is restricted to administrators only.
-        </p>
-
-        <div className="border-t border-gray-700 my-6"></div>
-
-        <div className="space-y-3">
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center"
+        >
           <button
-            onClick={() => navigate('/')}
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-lg transition duration-200 transform hover:scale-105"
+            onClick={() => window.location.href = '/'}
+            className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold rounded-lg hover:shadow-lg hover:shadow-yellow-500/50 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
           >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
             Go to Home
           </button>
-          
-          <button
-            onClick={handleLogout}
-            className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-          >
-            Logout
-          </button>
-        </div>
 
-        <p className="text-gray-500 text-xs mt-6">
-          If you believe this is an error, please contact support.
-        </p>
+          <button
+            onClick={() => window.history.back()}
+            className="px-8 py-4 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-700 border-2 border-gray-700 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Go Back
+          </button>
+        </motion.div>
+
+        {/* Additional Info */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="mt-12 pt-8 border-t border-gray-800"
+        >
+          <p className="text-gray-600 text-sm">
+            Error Code: <span className="text-yellow-500 font-mono">
+              {isAdminRouteAttempt ? '403 FORBIDDEN' : '404 NOT_FOUND'}
+            </span>
+          </p>
+          <p className="text-gray-700 text-xs mt-2">
+            {isAdminRouteAttempt 
+              ? 'Contact admin support if you believe you should have access'
+              : 'If you think this is a mistake, please contact support'}
+          </p>
+        </motion.div>
       </div>
     </div>
   );
 }
 
-// ✅ User Layout
+// User Layout
 function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
@@ -197,6 +260,7 @@ function UserLayout() {
       <main className="flex-grow pt-20">
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<ShopPage searchTerm={searchTerm} />} />
             <Route path="/shop" element={<ShopPage searchTerm={searchTerm} />} />
             <Route path="/home" element={<ShopPage searchTerm={searchTerm} />} />
@@ -215,7 +279,7 @@ function UserLayout() {
             <Route path="/faq" element={<FAQs />} />
             <Route path="/track-order" element={<OrderTrackingPage />} />
             
-            {/* Login/Register Routes */}
+            {/* Login/Register with Smart Redirect */}
             <Route 
               path="/login" 
               element={
@@ -230,6 +294,7 @@ function UserLayout() {
                 )
               } 
             />
+            
             <Route 
               path="/register" 
               element={
@@ -252,6 +317,7 @@ function UserLayout() {
                 </UserProtectedRoute>
               } 
             />
+            
             <Route 
               path="/profile" 
               element={
@@ -261,10 +327,7 @@ function UserLayout() {
               } 
             />
 
-            {/* Unauthorized Route */}
-            <Route path="/unauthorized" element={<UnauthorizedPage />} />
-
-            {/* 404 Not Found */}
+            {/* ❌ Catch all unmatched user routes -> 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -291,33 +354,44 @@ function UserLayout() {
   );
 }
 
-// ✅ 404 Not Found
-function NotFound() {
-  return (
-    <div className="min-h-[60vh] flex items-center justify-center p-6">
-      <div className="text-center">
-        <h1 className="text-6xl font-bold text-yellow-500 mb-4">404</h1>
-        <p className="text-2xl text-gray-600 dark:text-gray-300 mb-6">
-          Page Not Found
-        </p>
-        <button
-          onClick={() => window.location.href = '/'}
-          className="bg-yellow-500 hover:bg-yellow-400 text-black font-semibold px-6 py-3 rounded-lg transition"
-        >
-          Go to Home
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ✅ Main App Component
+// MAIN APP COMPONENT
 export default function App() {
+  useEffect(() => {
+    console.log('🚀 ========================================');
+    console.log('🚀 APPLICATION STARTED');
+    console.log('🚀 Checking authentication...');
+    
+    const adminToken = localStorage.getItem('adminToken');
+    const userToken = localStorage.getItem('token');
+    const authorizedTab = localStorage.getItem('authorizedAdminTab');
+    
+    console.log('🔑 Admin Token:', adminToken ? 'EXISTS ✅' : 'NONE ❌');
+    console.log('🔑 User Token:', userToken ? 'EXISTS ✅' : 'NONE ❌');
+    console.log('🔑 Authorized Tab:', authorizedTab || 'NONE');
+    console.log('🚀 ========================================');
+  }, []);
+
   return (
     <Provider store={store}>
       <Router>
         <Routes>
-          {/* 🔐 Admin Routes - Using ProtectedRoute component */}
+          {/* ========================================
+              🔐 ADMIN ROUTES - STRICTLY PROTECTED
+              No Token = 404
+              Wrong Tab = 404
+              ======================================== */}
+          
+          {/* /admin → Redirect to /Dashboard (with protection) */}
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute>
+                <Navigate to="/Dashboard" replace />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* /Dashboard → Admin Dashboard (protected) */}
           <Route 
             path="/Dashboard" 
             element={
@@ -329,6 +403,7 @@ export default function App() {
             } 
           />
           
+          {/* /admin/* → Admin Panel sub-routes (protected) */}
           <Route 
             path="/admin/*" 
             element={
@@ -340,7 +415,9 @@ export default function App() {
             } 
           />
 
-          {/* 👤 User Routes */}
+          {/* ========================================
+              👤 USER ROUTES
+              ======================================== */}
           <Route 
             path="/*" 
             element={
@@ -349,6 +426,11 @@ export default function App() {
               </WishlistProvider>
             }
           />
+
+          {/* ========================================
+              ❌ 404 ROUTE - Custom path
+              ======================================== */}
+          <Route path="/page-not-found-404" element={<NotFound />} />
         </Routes>
       </Router>
     </Provider>
