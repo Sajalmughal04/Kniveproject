@@ -1,5 +1,5 @@
 import Product from "../models/Product.js";
-import { deleteFromCloudinary } from "../config/cloudinary.js";
+import { deleteFromCloudinary } from "../middleware/uploadMiddleware.js"; // ✅ CHANGED: Import from uploadMiddleware
 
 // ✅ Get all products
 export const getAllProducts = async (req, res) => {
@@ -149,6 +149,7 @@ export const createProduct = async (req, res) => {
     
     // If file uploaded via multer (Cloudinary or local)
     if (req.file) {
+      console.log('✅ Image uploaded to:', req.file.path); // Debug log
       imageArray.push({
         url: req.file.path, // Cloudinary URL or local path
         alt: title,
@@ -177,6 +178,7 @@ export const createProduct = async (req, res) => {
 
     // Default image if none provided
     if (imageArray.length === 0) {
+      console.log('⚠️ No image provided, using placeholder');
       imageArray = [{ 
         url: "https://via.placeholder.com/400", 
         alt: title 
@@ -203,7 +205,7 @@ export const createProduct = async (req, res) => {
       attributes: attributes || {},
     });
 
-    console.log('✅ Product created:', product._id);
+    console.log('✅ Product created successfully:', product._id);
 
     res.status(201).json({
       success: true,
@@ -241,11 +243,18 @@ export const updateProduct = async (req, res) => {
 
     // Handle new image upload
     if (req.file) {
+      console.log('🔄 Updating product image...');
+      
       // Delete old images from Cloudinary if using Cloudinary
-      if (process.env.STORAGE_TYPE === 'cloudinary' && existingProduct.images?.length > 0) {
+      if (process.env.USE_LOCAL_STORAGE !== 'true' && existingProduct.images?.length > 0) {
+        console.log('🗑️ Deleting old images from Cloudinary...');
         for (const image of existingProduct.images) {
           if (image.url && image.url.includes('cloudinary.com')) {
-            await deleteFromCloudinary(image.url);
+            try {
+              await deleteFromCloudinary(image.url);
+            } catch (err) {
+              console.error('Failed to delete old image:', err);
+            }
           }
         }
       }
@@ -256,6 +265,7 @@ export const updateProduct = async (req, res) => {
         alt: updateData.title || existingProduct.title,
         public_id: req.file.filename || req.file.originalname
       }];
+      console.log('✅ New image URL:', req.file.path);
     }
     // Handle images update from JSON
     else if (updateData.images) {
@@ -318,11 +328,16 @@ export const deleteProduct = async (req, res) => {
     }
 
     // Delete images from Cloudinary if using Cloudinary
-    if (process.env.STORAGE_TYPE === 'cloudinary' && product.images?.length > 0) {
+    if (process.env.USE_LOCAL_STORAGE !== 'true' && product.images?.length > 0) {
       console.log('🗑️ Deleting images from Cloudinary...');
       for (const image of product.images) {
         if (image.url && image.url.includes('cloudinary.com')) {
-          await deleteFromCloudinary(image.url);
+          try {
+            await deleteFromCloudinary(image.url);
+            console.log('✅ Deleted image from Cloudinary');
+          } catch (err) {
+            console.error('Failed to delete image:', err);
+          }
         }
       }
     }

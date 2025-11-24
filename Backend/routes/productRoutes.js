@@ -1,6 +1,6 @@
-// backend/routes/productRoutes.js - FULLY UPDATED AND CORRECTED
+// backend/routes/productRoutes.js - FIXED VERSION
 import express from "express";
-import { upload } from "../config/cloudinary.js";
+import upload from "../Middleware/uploadMiddleware.js"; // ✅ CHANGED: Import from uploadMiddleware
 import {
   getAllProducts,
   getProductById,
@@ -9,7 +9,7 @@ import {
   deleteProduct,
   uploadProductImage
 } from "../controllers/productController.js";
-import { protectAdmin } from "../Middleware/authMiddleware.js"; // ✅ Admin-only protection
+import { protectAdmin } from "../Middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -21,7 +21,7 @@ router.get("/:id", getProductById);
 // Create product with image upload
 router.post(
   "/", 
-  protectAdmin, // ✅ Admin-only access
+  protectAdmin,
   upload.single('image'), 
   createProduct
 );
@@ -29,7 +29,7 @@ router.post(
 // Update product with optional image upload
 router.put(
   "/:id", 
-  protectAdmin, // ✅ Admin-only access
+  protectAdmin,
   upload.single('image'), 
   updateProduct
 );
@@ -37,14 +37,14 @@ router.put(
 // Delete product
 router.delete(
   "/:id", 
-  protectAdmin, // ✅ Admin-only access
+  protectAdmin,
   deleteProduct
 );
 
-// ✅ Separate endpoint for image upload (optional - if you want to upload images separately)
+// ✅ Separate endpoint for image upload (optional)
 router.post(
   "/upload/image",
-  protectAdmin, // ✅ Admin-only access
+  protectAdmin,
   upload.single('image'),
   uploadProductImage
 );

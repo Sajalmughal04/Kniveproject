@@ -48,11 +48,11 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       // Filter out empty images
       const validImages = productForm.images.filter(url => url.trim() !== '');
       
-      if (validImages.length === 0) {
-        alert('Please add at least one image URL!');
-        setLoading(false);
+       if (validImages.length === 0) {
+       alert('Please add at least one image URL!');
+       setLoading(false);
         return;
-      }
+       }
 
       // Convert attributes array to object
       const attributesObject = {};
