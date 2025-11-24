@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useDispatch } from "react-redux";
-import { addToCart } from "../redux/cartSlice"; // Update path according to your structure
+import { addToCart } from "../Redux/slice/cartSlice"; // Update path according to your structure
 import SkeletonCard from "./SkeletonCard";
 import SkeletonImage from "./SkeletonImage";
 
