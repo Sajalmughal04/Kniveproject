@@ -1,4 +1,4 @@
-// src/App.jsx - WITH 404 FOR UNAUTHORIZED ADMIN ACCESS
+// src/App.jsx - COMPLETE FIXED VERSION - 404 FOR UNAUTHORIZED ACCESS
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Provider, useSelector, useDispatch } from "react-redux";
@@ -6,7 +6,7 @@ import { store } from "./Redux/store.js";
 import { selectToast, clearToast } from "./Redux/slice/cartSlice.js";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Components
+// ✅ Import Components
 import Navbar from "./Knive/Navbar";
 import Footer from "./Knive/Footer";
 import WhatsAppButton from "./Knive/WhatsappButton";
@@ -14,11 +14,11 @@ import { WishlistProvider } from "./Knive/WishlistContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Protected Routes
-import ProtectedRoute from "./Admin/ProtectedRoute.jsx";
-import UserProtectedRoute from "./Knive/UserProtectedRoute.jsx";
+// 🔐 Import Protected Routes
+import ProtectedRoute from "./Admin/ProtectedRoute.jsx"; // ✅ Admin protection
+import UserProtectedRoute from "./Knive/UserProtectedRoute.jsx"; // ✅ User protection
 
-// Lazy load pages
+// ✅ Lazy load pages
 const ShopPage = lazy(() => import("./Knive/ShopPage.jsx"));
 const CategoryPage = lazy(() => import("./Knive/CategoryPage.jsx"));
 const AllCategoriesPage = lazy(() => import("./Knive/AllCategoriesPage.jsx"));
@@ -38,7 +38,7 @@ const ReviewPage = lazy(() => import("./Knive/ReviewPage.jsx"));
 const Dashboard = lazy(() => import("./Admin/Dashboard.jsx"));
 const AdminPanel = lazy(() => import("./Admin/AdminPanel.jsx"));
 
-// Loading Spinner
+// ✅ Loading Spinner
 function LoadingSpinner() {
   return (
     <div className="flex justify-center items-center h-[500px]">
@@ -52,7 +52,7 @@ function LoadingSpinner() {
   );
 }
 
-// Scroll To Top
+// ✅ Scroll To Top
 function ScrollToTop() {
   const { pathname } = useLocation();
   
@@ -63,7 +63,7 @@ function ScrollToTop() {
   return null;
 }
 
-// Redux Toast
+// ✅ Redux Toast
 function ReduxToast() {
   const toast = useSelector(selectToast);
   const dispatch = useDispatch();
@@ -96,25 +96,17 @@ function ReduxToast() {
   );
 }
 
-// ❌ 404 NOT FOUND PAGE - COMPREHENSIVE
+// ✅ 404 Not Found Page - ENHANCED
 function NotFound() {
   const location = useLocation();
 
   useEffect(() => {
     console.log('🚫 ========================================');
-    console.log('🚫 404 PAGE DISPLAYED');
+    console.log('🚫 404 PAGE NOT FOUND');
     console.log('🚫 Attempted URL:', location.pathname);
-    console.log('🚫 User Type: UNAUTHORIZED/VISITOR');
     console.log('🚫 ========================================');
   }, [location.pathname]);
 
-  // Detect if this is an admin route attempt
-  const isAdminRouteAttempt = location.pathname.toLowerCase().includes('admin') || 
-                               location.pathname.toLowerCase().includes('dashboard');
-
-  // Check if user tried to access admin without login
-  const hasNoToken = !localStorage.getItem('adminToken');
-  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center px-4">
       <div className="max-w-2xl w-full text-center">
@@ -126,7 +118,7 @@ function NotFound() {
           className="mb-8"
         >
           <h1 className="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 mb-4">
-            {isAdminRouteAttempt ? '403' : '404'}
+            404
           </h1>
           <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto mb-8 rounded-full"></div>
         </motion.div>
@@ -138,24 +130,11 @@ function NotFound() {
           transition={{ delay: 0.2, duration: 0.5 }}
         >
           <h2 className="text-4xl font-bold text-white mb-4">
-            {isAdminRouteAttempt 
-              ? (hasNoToken ? 'Access Denied' : 'Unauthorized Access') 
-              : 'Page Not Found'}
+            Page Not Found
           </h2>
           <p className="text-gray-400 text-lg mb-2">
-            {isAdminRouteAttempt 
-              ? (hasNoToken 
-                  ? "You must be logged in as an administrator to access this area." 
-                  : "You don't have permission to access this page.")
-              : "The page you're looking for doesn't exist."}
+            The page you're looking for doesn't exist.
           </p>
-          {isAdminRouteAttempt && (
-            <p className="text-red-400 text-sm mb-4 font-semibold">
-              {hasNoToken 
-                ? '🔒 Admin login required' 
-                : '🔒 This area is restricted to authorized administrators only'}
-            </p>
-          )}
           <p className="text-gray-500 text-sm mb-8">
             URL: <span className="text-yellow-500 font-mono">{location.pathname}</span>
           </p>
@@ -169,15 +148,19 @@ function NotFound() {
           className="mb-8"
         >
           <div className="w-48 h-48 mx-auto bg-gray-800/50 rounded-full flex items-center justify-center border-4 border-gray-700">
-            {isAdminRouteAttempt ? (
-              <svg className="w-24 h-24 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            ) : (
-              <svg className="w-24 h-24 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            )}
+            <svg 
+              className="w-24 h-24 text-yellow-500" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+              />
+            </svg>
           </div>
         </motion.div>
 
@@ -217,14 +200,10 @@ function NotFound() {
           className="mt-12 pt-8 border-t border-gray-800"
         >
           <p className="text-gray-600 text-sm">
-            Error Code: <span className="text-yellow-500 font-mono">
-              {isAdminRouteAttempt ? '403 FORBIDDEN' : '404 NOT_FOUND'}
-            </span>
+            Error Code: <span className="text-yellow-500 font-mono">404 NOT_FOUND</span>
           </p>
           <p className="text-gray-700 text-xs mt-2">
-            {isAdminRouteAttempt 
-              ? 'Contact admin support if you believe you should have access'
-              : 'If you think this is a mistake, please contact support'}
+            If you think this is a mistake, please contact support
           </p>
         </motion.div>
       </div>
@@ -232,7 +211,7 @@ function NotFound() {
   );
 }
 
-// User Layout
+// ✅ User Layout
 function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
@@ -279,7 +258,7 @@ function UserLayout() {
             <Route path="/faq" element={<FAQs />} />
             <Route path="/track-order" element={<OrderTrackingPage />} />
             
-            {/* Login/Register with Smart Redirect */}
+            {/* Login/Register Routes with Smart Redirect */}
             <Route 
               path="/login" 
               element={
@@ -327,7 +306,7 @@ function UserLayout() {
               } 
             />
 
-            {/* ❌ Catch all unmatched user routes -> 404 */}
+            {/* 404 Not Found - Catch all unmatched routes */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -354,20 +333,18 @@ function UserLayout() {
   );
 }
 
-// MAIN APP COMPONENT
+// ✅ MAIN APP COMPONENT - WITH 404 FOR UNAUTHORIZED ACCESS
 export default function App() {
   useEffect(() => {
     console.log('🚀 ========================================');
     console.log('🚀 APPLICATION STARTED');
-    console.log('🚀 Checking authentication...');
+    console.log('🚀 Checking authentication tokens...');
     
     const adminToken = localStorage.getItem('adminToken');
     const userToken = localStorage.getItem('token');
-    const authorizedTab = localStorage.getItem('authorizedAdminTab');
     
-    console.log('🔑 Admin Token:', adminToken ? 'EXISTS ✅' : 'NONE ❌');
-    console.log('🔑 User Token:', userToken ? 'EXISTS ✅' : 'NONE ❌');
-    console.log('🔑 Authorized Tab:', authorizedTab || 'NONE');
+    console.log('🔑 Admin Token:', adminToken ? 'EXISTS ✅' : 'NOT FOUND ❌');
+    console.log('🔑 User Token:', userToken ? 'EXISTS ✅' : 'NOT FOUND ❌');
     console.log('🚀 ========================================');
   }, []);
 
@@ -377,21 +354,10 @@ export default function App() {
         <Routes>
           {/* ========================================
               🔐 ADMIN ROUTES - STRICTLY PROTECTED
-              No Token = 404
-              Wrong Tab = 404
+              Unauthorized users will see 404
               ======================================== */}
           
-          {/* /admin → Redirect to /Dashboard (with protection) */}
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute>
-                <Navigate to="/Dashboard" replace />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* /Dashboard → Admin Dashboard (protected) */}
+          {/* Admin Dashboard - Protected */}
           <Route 
             path="/Dashboard" 
             element={
@@ -403,7 +369,7 @@ export default function App() {
             } 
           />
           
-          {/* /admin/* → Admin Panel sub-routes (protected) */}
+          {/* Admin Panel - Protected */}
           <Route 
             path="/admin/*" 
             element={
@@ -415,8 +381,18 @@ export default function App() {
             } 
           />
 
+          {/* Redirect /admin to /Dashboard (with protection check) */}
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute>
+                <Navigate to="/Dashboard" replace />
+              </ProtectedRoute>
+            }
+          />
+
           {/* ========================================
-              👤 USER ROUTES
+              👤 USER ROUTES - PUBLIC & PROTECTED
               ======================================== */}
           <Route 
             path="/*" 
@@ -426,11 +402,6 @@ export default function App() {
               </WishlistProvider>
             }
           />
-
-          {/* ========================================
-              ❌ 404 ROUTE - Custom path
-              ======================================== */}
-          <Route path="/page-not-found-404" element={<NotFound />} />
         </Routes>
       </Router>
     </Provider>

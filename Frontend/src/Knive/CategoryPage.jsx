@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
-import { useCart } from "./CartContext";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../redux/cartSlice"; // Update path according to your structure
 import SkeletonCard from "./SkeletonCard";
 import SkeletonImage from "./SkeletonImage";
 
@@ -11,7 +12,7 @@ const API_URL = "http://localhost:3000/api";
 const CategoryPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const dispatch = useDispatch();
 
   const [category, setCategory] = useState(null);
   const [products, setProducts] = useState([]);
@@ -49,13 +50,15 @@ const CategoryPage = () => {
 
   const handleAddToCart = (product, e) => {
     e.stopPropagation();
-    addToCart({
-      id: product._id,
-      name: product.title,
-      price: product.price,
-      image: product.images[0]?.url || "https://via.placeholder.com/400",
-      quantity: 1,
-    });
+    dispatch(
+      addToCart({
+        id: product._id,
+        name: product.title,
+        price: product.price,
+        image: product.images[0]?.url || "https://via.placeholder.com/400",
+        quantity: 1,
+      })
+    );
   };
 
   const toggleWishlist = (id, e) => {
