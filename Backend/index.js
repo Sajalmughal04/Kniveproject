@@ -26,12 +26,12 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ============================================
+
 // CORS Configuration
-// ============================================
+
 app.use(cors({
   origin: [
-    "https://kniveproject.vercel.app/",
+    "https://kniveproject.vercel.app",
     "http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
