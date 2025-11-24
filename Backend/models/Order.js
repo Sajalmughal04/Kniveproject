@@ -107,11 +107,9 @@ orderSchema.pre('save', async function (next) {
 });
 
 // Indexes for better query performance
-orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ 'customerInfo.email': 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ paymentStatus: 1 });
-orderSchema.index({ stripePaymentIntentId: 1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ paymentMethod: 1 });
 
