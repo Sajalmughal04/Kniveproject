@@ -1,4 +1,5 @@
-// src/components/admin/dashboard/Dashboard.jsx - COMPLETE WITH TAB LOGOUT
+// Dashboard.jsx - COMPLETE WITH LOGOUT CONFIRMATION
+
 import React from 'react';
 import { Package, ShoppingCart, Users, RefreshCw, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -6,79 +7,41 @@ import { useDispatch } from 'react-redux';
 import { logout as userLogout } from '../Redux/slice/authSlice.js';
 import StatsCard from './StatsCard';
 
-export default function Dashboard({ stats = {}, products = [], orders = [] }) {
+export default function Dashboard({ stats = {}, products = [], orders = [], onLogout }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get admin data from localStorage
   const adminData = React.useMemo(() => {
     const data = localStorage.getItem('adminData');
     return data ? JSON.parse(data) : { name: 'Admin', email: '' };
   }, []);
 
-  // ✅ COMPLETE LOGOUT - CLEAR AUTHORIZED TAB
+  // ✅ COMPLETE LOGOUT FUNCTION WITH CONFIRMATION
   const handleLogout = () => {
-    console.log('👋 ========================================');
-    console.log('👋 ADMIN LOGOUT INITIATED');
-    console.log('👋 ========================================');
+    // Ask for confirmation
+    const confirmed = window.confirm('Are you sure you want to logout?');
     
-    // Log current state
-    console.log('📊 BEFORE LOGOUT:');
-    console.log('  adminToken:', localStorage.getItem('adminToken') ? 'EXISTS' : 'NONE');
-    console.log('  token:', localStorage.getItem('token') ? 'EXISTS' : 'NONE');
-    console.log('  authorizedAdminTab:', localStorage.getItem('authorizedAdminTab') || 'NONE');
-    console.log('  All localStorage keys:', Object.keys(localStorage));
-    console.log('  All sessionStorage keys:', Object.keys(sessionStorage));
-    
-    // NUCLEAR CLEAR - Remove EVERYTHING
-    console.log('🗑️ CLEARING ALL STORAGE...');
-    
-    const keysToRemove = [
-      'adminToken',
-      'adminData', 
-      'authorizedAdminTab',  // ✅ KEY: Clear authorized tab
-      'token',
-      'userData',
-      'user',
-      'auth',
-      'persist:root'
-    ];
-    
-    keysToRemove.forEach(key => {
-      localStorage.removeItem(key);
-      console.log(`  ✓ Removed from localStorage: ${key}`);
-    });
-    
-    // Clear all sessionStorage
-    console.log('🗑️ CLEARING SESSION STORAGE...');
-    sessionStorage.clear();
-    console.log('  ✓ Session storage cleared (including currentTabId)');
-    
-    // Verify everything is cleared
-    console.log('📊 AFTER CLEARING:');
-    console.log('  adminToken:', localStorage.getItem('adminToken'));
-    console.log('  authorizedAdminTab:', localStorage.getItem('authorizedAdminTab'));
-    console.log('  Remaining localStorage keys:', Object.keys(localStorage));
-    console.log('  Remaining sessionStorage keys:', Object.keys(sessionStorage));
-    
-    // Clear Redux
-    console.log('🔄 Dispatching Redux logout...');
-    try {
-      dispatch(userLogout());
-      console.log('  ✓ Redux cleared');
-    } catch (err) {
-      console.error('  ✗ Redux error:', err);
+    if (!confirmed) {
+      console.log('❌ Logout cancelled by user');
+      return;
     }
     
     console.log('👋 ========================================');
-    console.log('👋 LOGOUT COMPLETE');
-    console.log('👋 REDIRECTING TO HOME...');
+    console.log('👋 DASHBOARD LOGOUT INITIATED');
     console.log('👋 ========================================');
     
-    // Force redirect
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 100);
+    // Dispatch Redux logout (clears everything)
+    dispatch(userLogout());
+    
+    // If onLogout prop provided, use it
+    if (onLogout) {
+      onLogout();
+    } else {
+      // Otherwise redirect manually
+      navigate('/', { replace: true });
+    }
+    
+    console.log('✅ LOGOUT COMPLETE');
   };
 
   const statsData = [
@@ -142,13 +105,13 @@ export default function Dashboard({ stats = {}, products = [], orders = [] }) {
             <span className="hidden md:inline">Refresh</span>
           </button>
 
-          {/* LOGOUT BUTTON - CLEARS AUTHORIZED TAB */}
+          {/* ✅ LOGOUT BUTTON WITH CONFIRMATION */}
           <button
             onClick={handleLogout}
             className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-bold"
             title="Logout and Clear Session"
           >
-            <LogOut size={20} className="font-bold" />
+            <LogOut size={20} />
             <span className="hidden md:inline">LOGOUT</span>
           </button>
         </div>

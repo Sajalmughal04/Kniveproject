@@ -1,4 +1,4 @@
-// src/App.jsx - COMPLETE FIXED VERSION - 404 FOR UNAUTHORIZED ACCESS
+// src/App.jsx - FIXED ADMIN ROUTES
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Provider, useSelector, useDispatch } from "react-redux";
@@ -15,8 +15,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // 🔐 Import Protected Routes
-import ProtectedRoute from "./Admin/ProtectedRoute.jsx"; // ✅ Admin protection
-import UserProtectedRoute from "./Knive/UserProtectedRoute.jsx"; // ✅ User protection
+import ProtectedRoute from "./Admin/ProtectedRoute.jsx";
+import UserProtectedRoute from "./Knive/UserProtectedRoute.jsx";
 
 // ✅ Lazy load pages
 const ShopPage = lazy(() => import("./Knive/ShopPage.jsx"));
@@ -96,7 +96,7 @@ function ReduxToast() {
   );
 }
 
-// ✅ 404 Not Found Page - ENHANCED
+// ✅ 404 Not Found Page
 function NotFound() {
   const location = useLocation();
 
@@ -110,7 +110,6 @@ function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center px-4">
       <div className="max-w-2xl w-full text-center">
-        {/* Animated 404 */}
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -123,7 +122,6 @@ function NotFound() {
           <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto mb-8 rounded-full"></div>
         </motion.div>
 
-        {/* Error Message */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -140,7 +138,6 @@ function NotFound() {
           </p>
         </motion.div>
 
-        {/* Illustration */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -164,7 +161,6 @@ function NotFound() {
           </div>
         </motion.div>
 
-        {/* Action Buttons */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -192,7 +188,6 @@ function NotFound() {
           </button>
         </motion.div>
 
-        {/* Additional Info */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -258,13 +253,13 @@ function UserLayout() {
             <Route path="/faq" element={<FAQs />} />
             <Route path="/track-order" element={<OrderTrackingPage />} />
             
-            {/* Login/Register Routes with Smart Redirect */}
+            {/* Login/Register Routes */}
             <Route 
               path="/login" 
               element={
                 isAuthenticated ? (
                   user?.role === 'admin' ? (
-                    <Navigate to="/Dashboard" replace />
+                    <Navigate to="/admin/dashboard" replace />
                   ) : (
                     <Navigate to="/" replace />
                   )
@@ -306,7 +301,7 @@ function UserLayout() {
               } 
             />
 
-            {/* 404 Not Found - Catch all unmatched routes */}
+            {/* 404 Not Found */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -333,7 +328,7 @@ function UserLayout() {
   );
 }
 
-// ✅ MAIN APP COMPONENT - WITH 404 FOR UNAUTHORIZED ACCESS
+// ✅ MAIN APP COMPONENT - FIXED ADMIN ROUTES
 export default function App() {
   useEffect(() => {
     console.log('🚀 ========================================');
@@ -354,22 +349,33 @@ export default function App() {
         <Routes>
           {/* ========================================
               🔐 ADMIN ROUTES - STRICTLY PROTECTED
-              Unauthorized users will see 404
               ======================================== */}
           
-          {/* Admin Dashboard - Protected */}
+          {/* ✅ /admin → AdminPanel (Sidebar wala page) */}
           <Route 
-            path="/Dashboard" 
+            path="/admin" 
             element={
               <ProtectedRoute>
                 <Suspense fallback={<LoadingSpinner />}>
-                  <Dashboard />
+                  <AdminPanel />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ✅ /admin/dashboard → AdminPanel with Dashboard */}
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <AdminPanel />
                 </Suspense>
               </ProtectedRoute>
             } 
           />
-          
-          {/* Admin Panel - Protected */}
+
+          {/* ✅ /admin/* → All admin sub-routes */}
           <Route 
             path="/admin/*" 
             element={
@@ -381,14 +387,10 @@ export default function App() {
             } 
           />
 
-          {/* Redirect /admin to /Dashboard (with protection check) */}
+          {/* ⚠️ DEPRECATED: /Dashboard redirect (backward compatibility) */}
           <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute>
-                <Navigate to="/Dashboard" replace />
-              </ProtectedRoute>
-            }
+            path="/Dashboard" 
+            element={<Navigate to="/admin/dashboard" replace />}
           />
 
           {/* ========================================

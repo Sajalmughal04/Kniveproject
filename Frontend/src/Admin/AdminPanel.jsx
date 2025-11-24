@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import axios from "axios";
+import { logout as reduxLogout } from "../Redux/slice/authSlice.js";
 import Sidebar from "./Sidebar";
 import Dashboard from "./Dashboard";
 import ProductsPage from "./ProductsPage";
@@ -10,7 +12,6 @@ import LoadingIndicator from "./LoadingIndicator";
 
 const API_URL = "http://localhost:3000/api";
 
-// Configure axios to send token with every request
 const setupAxios = () => {
   const token = localStorage.getItem("adminToken");
   if (token) {
@@ -20,13 +21,13 @@ const setupAxios = () => {
 
 export default function AdminPanel() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Setup axios on mount (removed auth check - handled by App.jsx)
   useEffect(() => {
     setupAxios();
   }, []);
@@ -112,14 +113,18 @@ export default function AdminPanel() {
       : 0
   };
 
-  // ✅ Logout function
+  // ✅ FIXED LOGOUT - Clears everything
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminData');
-      axios.defaults.headers.common["Authorization"] = null;
-      navigate('/admin/login', { replace: true });
-    }
+    console.log('🚪 AdminPanel Logout Called');
+    
+    // Clear axios headers
+    axios.defaults.headers.common["Authorization"] = null;
+    
+    // Dispatch Redux logout (this clears everything)
+    dispatch(reduxLogout());
+    
+    // Navigate to home
+    navigate('/', { replace: true });
   };
 
   return (
@@ -140,7 +145,12 @@ export default function AdminPanel() {
 
         <div className="p-8">
           {currentPage === "dashboard" && (
-            <Dashboard stats={stats} products={products} orders={orders} />
+            <Dashboard 
+              stats={stats} 
+              products={products} 
+              orders={orders}
+              onLogout={handleLogout}
+            />
           )}
 
           {currentPage === "products" && (
