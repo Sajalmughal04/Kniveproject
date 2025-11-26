@@ -1,4 +1,4 @@
-// src/Knive/LoginPage.jsx - WITH UNIQUE SESSION ID
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,7 +21,7 @@ const LoginPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
 
-  const from = location.state?.from || '/shop';
+  const from = location.state?.from || '/';
 
   useEffect(() => {
     return () => {
@@ -48,17 +48,10 @@ const LoginPage = () => {
     dispatch(loginStart());
 
     try {
-      console.log('🔐 ========================================');
-      console.log('🔐 LOGIN ATTEMPT STARTED');
-      console.log('🔐 Email:', formData.email);
-      console.log('🔐 ========================================');
-      
       const response = await axios.post(`${API_URL}/login`, {
         email: formData.email,
         password: formData.password,
       });
-
-      console.log('✅ Login response received:', response.data);
 
       if (response.data.success) {
         const token = response.data.data.token;
@@ -72,36 +65,23 @@ const LoginPage = () => {
           role: response.data.data.role || 'customer',
         };
 
-        console.log('👤 User data received:');
-        console.log('   Name:', userData.name);
-        console.log('   Email:', userData.email);
-        console.log('   Role:', userData.role);
-
-        // ✅ CHECK IF USER IS ADMIN
+        // CHECK IF USER IS ADMIN
         if (userData.role === 'admin') {
-          console.log('👑 ========================================');
-          console.log('👑 ADMIN LOGIN DETECTED');
-          console.log('👑 ========================================');
-          
-          // 🔑 GENERATE UNIQUE TAB ID
+          // Generate unique tab ID
           const tabId = sessionStorage.getItem('currentTabId') || `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           sessionStorage.setItem('currentTabId', tabId);
-          console.log('🆔 Current Tab ID:', tabId);
           
           // Clear old admin session
-          console.log('🗑️ Clearing any old admin session...');
           localStorage.removeItem('adminToken');
           localStorage.removeItem('adminData');
           localStorage.removeItem('authorizedAdminTab');
           localStorage.removeItem('token');
           localStorage.removeItem('userData');
           
-          // Save NEW admin session with THIS tab authorized
-          console.log('💾 Saving new admin session...');
+          // Save new admin session with this tab authorized
           localStorage.setItem('adminToken', token);
           localStorage.setItem('adminData', JSON.stringify(userData));
           localStorage.setItem('authorizedAdminTab', tabId);
-          console.log('✅ Tab authorized:', tabId);
           
           // Dispatch Redux
           dispatch(loginSuccess({ user: userData, token }));
@@ -112,8 +92,6 @@ const LoginPage = () => {
           // Show success message
           dispatch(showToast(`Welcome Admin, ${userData.name}! 👑`));
           
-          console.log('✅ ADMIN LOGIN COMPLETE');
-          
           setTimeout(() => {
             navigate('/admin/dashboard', { replace: true });
           }, 100);
@@ -122,8 +100,6 @@ const LoginPage = () => {
         }
 
         // REGULAR USER LOGIN
-        console.log('👤 REGULAR USER LOGIN');
-        
         dispatch(loginSuccess({ user: userData, token }));
         setFormData({ email: "", password: "" });
         dispatch(showToast(`Welcome back, ${userData.name}! 🎉`));
@@ -133,12 +109,9 @@ const LoginPage = () => {
         }, 100);
         
       } else {
-        console.log('❌ Login failed');
         dispatch(loginFailure("Login failed. Please try again."));
       }
     } catch (err) {
-      console.error('❌ LOGIN ERROR:', err.message);
-      
       let errorMessage = "An error occurred. Please try again.";
       
       if (err.response) {

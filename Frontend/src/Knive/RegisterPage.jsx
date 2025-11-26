@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react"; // Install: npm install lucide-react
 
 const API_URL = "http://localhost:3000/api/auth";
 
@@ -17,8 +18,9 @@ const RegisterPage = ({ setUser }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Get the page user was trying to access (default to home)
   const from = location.state?.from || '/';
 
   const handleChange = (e) => {
@@ -26,7 +28,6 @@ const RegisterPage = ({ setUser }) => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    // Clear error when typing
     if (error) setError("");
   };
 
@@ -34,7 +35,6 @@ const RegisterPage = ({ setUser }) => {
     e.preventDefault();
     setError("");
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -57,9 +57,7 @@ const RegisterPage = ({ setUser }) => {
 
       console.log('✅ Registration successful:', response.data);
 
-      // Check if response is successful
       if (response.data.success) {
-        // Show success toast
         toast.success('Account created successfully! Redirecting to login...', {
           position: "top-right",
           autoClose: 3000,
@@ -69,7 +67,6 @@ const RegisterPage = ({ setUser }) => {
           draggable: true,
         });
         
-        // Clear form
         setFormData({
           name: "",
           email: "",
@@ -77,7 +74,6 @@ const RegisterPage = ({ setUser }) => {
           confirmPassword: "",
         });
         
-        // Redirect to login page with the intended destination
         setTimeout(() => {
           navigate("/login", { state: { from } });
         }, 1000);
@@ -90,7 +86,6 @@ const RegisterPage = ({ setUser }) => {
         "Registration failed. Please try again."
       );
       
-      // Show error toast
       toast.error(err.response?.data?.message || 'Registration failed. Please try again.', {
         position: "top-right",
         autoClose: 3000,
@@ -114,7 +109,6 @@ const RegisterPage = ({ setUser }) => {
           onSubmit={handleRegister}
           className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 flex flex-col gap-6"
         >
-          {/* Show message if redirected from checkout or other protected route */}
           {from !== '/' && (
             <div className="p-4 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-600 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-300 text-center font-semibold">
@@ -168,36 +162,66 @@ const RegisterPage = ({ setUser }) => {
             />
           </div>
 
+          {/* Password Field with Eye Icon */}
           <div className="flex flex-col">
             <label className="text-gray-700 dark:text-gray-300 font-semibold mb-2">
               Password
             </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Create a password (min 6 characters)"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:bg-gray-700 dark:text-white transition"
-              required
-              disabled={loading}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a password (min 6 characters)"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:bg-gray-700 dark:text-white transition"
+                required
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition"
+                disabled={loading}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
 
+          {/* Confirm Password Field with Eye Icon */}
           <div className="flex flex-col">
             <label className="text-gray-700 dark:text-gray-300 font-semibold mb-2">
               Confirm Password
             </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:bg-gray-700 dark:text-white transition"
-              required
-              disabled={loading}
-            />
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:bg-gray-700 dark:text-white transition"
+                required
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition"
+                disabled={loading}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <button
@@ -238,8 +262,6 @@ const RegisterPage = ({ setUser }) => {
             </Link>
           </p>
         </form>
-
-        
       </div>
     </div>
   );

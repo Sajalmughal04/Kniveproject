@@ -97,7 +97,7 @@ function CheckoutForm({ customerInfo, orderTotal, onSuccess }) {
         disabled={isLoading || !stripe || !elements}
         className="w-full bg-yellow-500 text-black font-bold py-3 rounded-xl"
       >
-        {isLoading ? "⏳ Processing..." : `💳 Pay Rs. ${orderTotal.toFixed(2)}`}
+        {isLoading ? "⏳ Processing..." : `💳 Pay $${orderTotal.toFixed(2)}`}
       </button>
     </form>
   );
