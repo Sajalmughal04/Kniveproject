@@ -18,9 +18,6 @@ const Footer = () => {
           {/* About Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              
-                
-            
               <h2 className="text-2xl font-bold text-white">BladeCraft</h2>
             </div>
             <p className="text-gray-400 leading-relaxed text-sm">
@@ -107,22 +104,27 @@ const Footer = () => {
               <span className="absolute -bottom-2 left-0 w-12 h-1 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full"></span>
             </h3>
             <div className="space-y-4">
+              {/* Email */}
               <a 
-                href="mailto:support@knifehub.com" 
-                className="flex items-start gap-3 text-gray-400 hover:text-yellow-500 transition-all duration-300 group"
+                href="mailto:support@knifehub.com?subject=Customer%20Inquiry&body=Hello%20BladeCraft%20Team," 
+                className="flex items-start gap-3 text-gray-400 hover:text-yellow-500 transition-all duration-300 group cursor-pointer"
+                onClick={(e) => {
+                  window.location.href = 'mailto:support@knifehub.com';
+                }}
               >
                 <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-yellow-500/20 transition-all">
                   <Mail size={18} />
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Email</p>
-                  <p className="text-sm">support@knifehub.com</p>
+                  <p className="text-sm break-all">support@knifehub.com</p>
                 </div>
               </a>
 
+              {/* Phone */}
               <a 
                 href="tel:+923466170539" 
-                className="flex items-start gap-3 text-gray-400 hover:text-yellow-500 transition-all duration-300 group"
+                className="flex items-start gap-3 text-gray-400 hover:text-yellow-500 transition-all duration-300 group cursor-pointer"
               >
                 <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-yellow-500/20 transition-all">
                   <Phone size={18} />
@@ -133,7 +135,13 @@ const Footer = () => {
                 </div>
               </a>
 
-              <div className="flex items-start gap-3 text-gray-400 group">
+              {/* Address - Google Maps Link */}
+              <a 
+                href="https://www.google.com/maps?q=32.441700,74.118200"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 text-gray-400 hover:text-yellow-500 transition-all duration-300 group cursor-pointer"
+              >
                 <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-yellow-500/20 transition-all">
                   <MapPin size={18} />
                 </div>
@@ -144,13 +152,10 @@ const Footer = () => {
                     Basti Qudartabad, Wazirabad 52000
                   </p>
                 </div>
-              </div>
+              </a>
             </div>
           </div>
         </div>
-
-        {/* Newsletter Section */}
-        
       </div>
 
       {/* Bottom Bar */}

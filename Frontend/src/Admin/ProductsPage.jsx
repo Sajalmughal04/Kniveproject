@@ -28,91 +28,121 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
     };
   };
 
-  const handleProductSubmit = async (e) => {
+  // ✅ UPDATED: Now accepts formData and uploadType parameters
+  const handleProductSubmit = async (e, formData = null, uploadType = 'url') => {
     e.preventDefault();
     setLoading(true);
     
-    // Debug logging
-    console.log('🔍 Submitting product:', productForm);
+    console.log('🔍 Upload Type:', uploadType);
     console.log('🔍 API URL:', `${API_URL}/products`);
     console.log('🔍 Token exists:', !!localStorage.getItem('adminToken'));
     
     try {
-      // Validate required fields
-      if (!productForm.title || !productForm.price || !productForm.category) {
-        alert('Please fill in all required fields!');
-        setLoading(false);
-        return;
-      }
-
-      // Filter out empty images
-      const validImages = productForm.images.filter(url => url.trim() !== '');
+      let response;
       
-       if (validImages.length === 0) {
-       alert('Please add at least one image URL!');
-       setLoading(false);
-        return;
-       }
-
-      // Convert attributes array to object
-      const attributesObject = {};
-      productForm.attributes.forEach(attr => {
-        if (attr.key.trim() && attr.value.trim()) {
-          attributesObject[attr.key.trim()] = attr.value.trim();
-        }
-      });
-
-      const productData = {
-        title: productForm.title.trim(),
-        price: Number(productForm.price),
-        stock: Number(productForm.stock) || 0,
-        category: productForm.category.toLowerCase(),
-        description: productForm.description.trim(),
-        images: validImages,
-        featured: productForm.featured || false,
-        attributes: attributesObject
-      };
-
-      if (editingProduct) {
-        // Update existing product
-        console.log('📝 Updating product:', editingProduct._id);
-        const response = await axios.put(
-          `${API_URL}/products/${editingProduct._id}`,
-          productData,
-          { headers: getAuthHeaders() }
-        );
+      if (uploadType === 'file' && formData) {
+        // ✅ FILE UPLOAD METHOD
+        console.log('📤 Uploading files to Cloudinary...');
         
-        console.log('✅ Update response:', response.data);
+        const token = localStorage.getItem('adminToken');
         
-        if (response.data.success) {
-          alert('Product updated successfully! ✅');
-          fetchProducts();
+        if (editingProduct) {
+          // Update with files
+          response = await axios.put(
+            `${API_URL}/products/${editingProduct._id}`,
+            formData,
+            { 
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
+        } else {
+          // Create with files
+          response = await axios.post(
+            `${API_URL}/products`,
+            formData,
+            { 
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
         }
+        
       } else {
-        // Create new product
-        console.log('➕ Creating new product');
-        const response = await axios.post(
-          `${API_URL}/products`,
-          productData,
-          { headers: getAuthHeaders() }
-        );
+        // ✅ URL METHOD
+        // Validate required fields
+        if (!productForm.title || !productForm.price || !productForm.category) {
+          alert('Please fill in all required fields!');
+          setLoading(false);
+          return;
+        }
+
+        // Filter out empty images
+        const validImages = productForm.images.filter(url => url.trim() !== '');
         
-        console.log('✅ Create response:', response.data);
-        
-        if (response.data.success) {
-          alert('Product added successfully! ✅');
-          fetchProducts();
+        if (validImages.length === 0) {
+          alert('Please add at least one image URL!');
+          setLoading(false);
+          return;
+        }
+
+        // Convert attributes array to object
+        const attributesObject = {};
+        productForm.attributes.forEach(attr => {
+          if (attr.key.trim() && attr.value.trim()) {
+            attributesObject[attr.key.trim()] = attr.value.trim();
+          }
+        });
+
+        const productData = {
+          title: productForm.title.trim(),
+          price: Number(productForm.price),
+          stock: Number(productForm.stock) || 0,
+          category: productForm.category.toLowerCase(),
+          description: productForm.description.trim(),
+          imageUrls: validImages, // ✅ Send as imageUrls for backend to handle
+          uploadMethod: 'url',
+          featured: productForm.featured || false,
+          attributes: attributesObject
+        };
+
+        if (editingProduct) {
+          // Update existing product
+          console.log('📝 Updating product:', editingProduct._id);
+          response = await axios.put(
+            `${API_URL}/products/${editingProduct._id}`,
+            productData,
+            { headers: getAuthHeaders() }
+          );
+        } else {
+          // Create new product
+          console.log('➕ Creating new product');
+          response = await axios.post(
+            `${API_URL}/products`,
+            productData,
+            { headers: getAuthHeaders() }
+          );
         }
       }
       
-      setShowProductModal(false);
-      setEditingProduct(null);
-      resetForm();
+      console.log('✅ Response:', response.data);
+      
+      if (response.data.success) {
+        alert(editingProduct ? 'Product updated successfully! ✅' : 'Product added successfully! ✅');
+        fetchProducts();
+        setShowProductModal(false);
+        setEditingProduct(null);
+        resetForm();
+      }
+      
     } catch (error) {
       console.error('❌ Full error object:', error);
       console.error('❌ Error response:', error.response);
       console.error('❌ Error message:', error.message);
-      console.error('❌ Error config:', error.config);
       
       if (error.code === 'ERR_NETWORK') {
         alert('❌ Network Error! Backend server is not running.\n\nPlease start backend: cd backend && npm start');

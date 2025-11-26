@@ -41,7 +41,7 @@ app.use(cors({
 // ============================================
 // Webhook route with raw body parser (BEFORE json parser)
 // ============================================
-app.post("/api/payment/webhook", 
+app.use("/api/payment/webhook", 
   express.raw({ type: "application/json" }), 
   (req, res, next) => {
     req.url = '/webhook';
@@ -157,7 +157,7 @@ const logEndpoints = () => {
 // ============================================
 // Root Route
 // ============================================
-app.get("/", (req, res) => {
+app.use("/", (req, res) => {
   res.json({ 
     message: "🚀 Knives Backend Server is running!", 
     timestamp: new Date().toISOString(),
