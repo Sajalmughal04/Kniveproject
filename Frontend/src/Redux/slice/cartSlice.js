@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { logout } from './authSlice'; // ✅ Import logout to clear cart on logout
 
 // Helper function to load cart from localStorage
 const loadCartFromStorage = () => {
@@ -44,8 +45,22 @@ const cartSlice = createSlice({
         ? parseFloat(product.price.replace("$", "").trim())
         : product.price;
 
+      // Parse discount fields
+      const discountType = product.discountType || 'none';
+      const discountValue = product.discountValue || 0;
+      const hasDiscount = product.hasDiscount || (discountValue > 0 && discountType !== 'none');
+
+      // Calculate final price if not provided
+      let finalPrice = product.finalPrice || numericPrice;
+      if (typeof finalPrice === "string") {
+        finalPrice = parseFloat(finalPrice.replace("$", "").trim());
+      }
+
+      // Calculate savings
+      const savings = product.savings || (hasDiscount ? numericPrice - finalPrice : 0);
+
       const existing = state.items.find((item) => item.id === product.id);
-      
+
       if (existing) {
         existing.quantity += (product.quantity || 1);
         state.toast = "🛒 Quantity updated!";
@@ -54,10 +69,15 @@ const cartSlice = createSlice({
           ...product,
           quantity: product.quantity || 1,
           price: numericPrice,
+          discountType,
+          discountValue,
+          finalPrice,
+          hasDiscount,
+          savings,
         });
         state.toast = "✅ Item added to cart!";
       }
-      
+
       saveCartToStorage(state.items);
     },
 
@@ -82,7 +102,6 @@ const cartSlice = createSlice({
       localStorage.removeItem("customer_cart");
     },
 
-    // ✅ NEW: showToast action for custom messages
     showToast: (state, action) => {
       state.toast = action.payload;
     },
@@ -91,24 +110,63 @@ const cartSlice = createSlice({
       state.toast = "";
     },
   },
+
+  // ✅ Listen to logout action from authSlice
+  extraReducers: (builder) => {
+    builder.addCase(logout, (state) => {
+      state.items = [];
+      state.toast = "";
+      console.log('🛒 Cart cleared on logout');
+    });
+  },
 });
 
-// Selectors
+// ========================================
+// ✅ SELECTORS - ALL EXPORTED
+// ========================================
+
+// Get all cart items
 export const selectCartItems = (state) => state.cart.items;
+
+// Get toast message
 export const selectToast = (state) => state.cart.toast;
+
+// Get total cart value
 export const selectCartTotal = (state) =>
-  state.cart.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+  state.cart.items.reduce((sum, item) => {
+    const itemPrice = item.finalPrice || item.price;
+    return sum + item.quantity * itemPrice;
+  }, 0);
+
+// Get total item count
 export const selectCartCount = (state) =>
   state.cart.items.reduce((total, item) => total + item.quantity, 0);
 
-// ✅ Export showToast with other actions
-export const { 
-  addToCart, 
-  removeFromCart, 
-  updateQuantity, 
-  clearCart, 
-  showToast,  // ✅ Added
-  clearToast 
+// Get total savings
+export const selectCartSavings = (state) =>
+  state.cart.items.reduce((sum, item) => {
+    const savings = item.savings || 0;
+    return sum + item.quantity * savings;
+  }, 0);
+
+// Check if cart is empty
+export const selectIsCartEmpty = (state) => state.cart.items.length === 0;
+
+// Get cart item by ID
+export const selectCartItemById = (id) => (state) =>
+  state.cart.items.find((item) => item.id === id);
+
+// ========================================
+// ✅ ACTIONS - ALL EXPORTED
+// ========================================
+
+export const {
+  addToCart,
+  removeFromCart,
+  updateQuantity,
+  clearCart,
+  showToast,
+  clearToast
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

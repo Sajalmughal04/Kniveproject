@@ -4,15 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useDispatch, useSelector } from "react-redux"; // ✅ Redux
-import { addToCart } from "../Redux/slice/cartSlice"; // ✅ Redux Action
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart } from "../Redux/slice/cartSlice";
 import { useWishlist } from "./WishlistContext";
 
 const API_URL = "http://localhost:3000/api";
 
 const ProductDetail = () => {
-  const dispatch = useDispatch(); // ✅ Redux Dispatch
-  const { user } = useSelector((state) => state.auth || {}); // ✅ Get user from Redux
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth || {});
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -23,15 +23,12 @@ const ProductDetail = () => {
   const [currentImage, setCurrentImage] = useState(0);
   const [error, setError] = useState(null);
 
-  // ✅ Fetch product from backend with FULL DEBUGGING
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
       setError(null);
       try {
         const response = await axios.get(`${API_URL}/products/${id}`);
-        
-        // ✅ FIXED - Extract product from nested structure
         const productData = response.data.product || response.data;
         
         console.log("📦 Full Response:", response.data);
@@ -52,7 +49,6 @@ const ProductDetail = () => {
     fetchProduct();
   }, [id]);
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
@@ -64,7 +60,6 @@ const ProductDetail = () => {
     );
   }
 
-  // Error state
   if (error || !product) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
@@ -81,15 +76,19 @@ const ProductDetail = () => {
     );
   }
 
-  // ✅ FIXED - Direct price access with better validation
   const productPrice = product?.price || 0;
   
-  // ✅ ENHANCED DEBUG
   console.log("🔍 Final Product Check:");
   console.log("  - Product:", product);
   console.log("  - Price:", product?.price);
   console.log("  - Title:", product?.title);
   console.log("  - productPrice variable:", productPrice);
+
+  const discountType = product?.discountType || 'none';
+  const discountValue = product?.discountValue || 0;
+  const hasDiscount = product?.hasDiscount || (discountValue > 0 && discountType !== 'none');
+  const finalPrice = product?.finalPrice || product?.discountedPrice || productPrice;
+  const savings = product?.savings || (hasDiscount ? productPrice - finalPrice : 0);
   
   if (!product || !product.price || !product.title) {
     console.error("❌ Missing required fields!");
@@ -116,20 +115,25 @@ const ProductDetail = () => {
     );
   }
 
-  // ✅ Images with fallback
   const images = product.images && product.images.length > 0 
     ? product.images.map(img => img.url) 
     : ["data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23f3f4f6' width='400' height='400'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='24' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E"];
 
-  // ✅ Add to cart handler - NOW USING REDUX
+  // ✅ FIXED - Use finalPrice (discounted price) instead of productPrice
   const handleAddToCart = () => {
     if (product.stock > 0) {
       dispatch(addToCart({ 
         id: product._id,
         name: product.title,
-        price: productPrice,
+        price: finalPrice, // ✅ CHANGED: Use finalPrice instead of productPrice
         image: images[0],
-        quantity: parseInt(quantity)
+        quantity: parseInt(quantity),
+        discountType,
+        discountValue,
+        finalPrice,
+        hasDiscount,
+        savings,
+        originalPrice: productPrice // ✅ Keep original price for reference
       }));
       
       toast.success(`${product.title} added to cart!`, {
@@ -139,7 +143,6 @@ const ProductDetail = () => {
     }
   };
 
-  // Buy it now
   const handleBuyNow = () => {
     if (product.stock === 0) {
       toast.error("This product is out of stock!", {
@@ -163,7 +166,6 @@ const ProductDetail = () => {
     navigate("/checkout");
   };
 
-  // ✅ FIXED - Use Context for wishlist with COMPLETE data
   const handleToggleWishlist = () => {
     if (!product || !product._id) {
       console.error("❌ Product data missing!");
@@ -175,9 +177,12 @@ const ProductDetail = () => {
       _id: product._id,
       name: product.title,
       title: product.title,
-      price: productPrice,
+      price: finalPrice, // ✅ Use finalPrice for wishlist too
+      originalPrice: productPrice,
+      hasDiscount,
+      discountType,
+      discountValue,
       image: images && images.length > 0 ? images[0] : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23f3f4f6' width='400' height='400'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='24' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E",
-      oldPrice: product.oldPrice || null,
       category: product.category,
       stock: product.stock,
       description: product.description
@@ -187,10 +192,8 @@ const ProductDetail = () => {
     toggleWishlist(wishlistItem);
   };
 
-  // Check if in wishlist
   const inWishlist = isInWishlist(product._id);
 
-  // Image navigation
   const nextImage = () =>
     setCurrentImage((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   const prevImage = () =>
@@ -214,7 +217,6 @@ const ProductDetail = () => {
             />
           </AnimatePresence>
 
-          {/* Navigation Arrows */}
           {images.length > 1 && (
             <>
               <button
@@ -232,7 +234,6 @@ const ProductDetail = () => {
             </>
           )}
           
-          {/* Stock Badge */}
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
               <span className="text-white font-bold text-2xl">OUT OF STOCK</span>
@@ -240,7 +241,6 @@ const ProductDetail = () => {
           )}
         </div>
 
-        {/* Thumbnails */}
         {images.length > 1 && (
           <div className="flex gap-3 justify-center">
             {images.map((img, index) => (
@@ -264,12 +264,32 @@ const ProductDetail = () => {
       <div className="md:w-1/2 w-full">
         <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
         
-        {/* ✅ FIXED - Safe price display with fallback */}
-        <p className="text-2xl text-yellow-500 font-bold mb-4">
-          Rs. {productPrice.toFixed(2)}
-        </p>
+        {/* Price Display with Discount */}
+        <div className="mb-4">
+          {hasDiscount ? (
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-2xl text-yellow-500 font-bold">
+                ${finalPrice.toFixed(2)}
+              </p>
+              <p className="text-lg text-gray-500 dark:text-gray-400 line-through">
+                ${productPrice.toFixed(2)}
+              </p>
+              <span className="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded">
+                {discountType === 'percentage' ? `${discountValue}% OFF` : `Rs. ${discountValue} OFF`}
+              </span>
+            </div>
+          ) : (
+            <p className="text-2xl text-yellow-500 font-bold">
+              ${productPrice.toFixed(2)}
+            </p>
+          )}
+          {hasDiscount && (
+            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+              You save ${savings.toFixed(2)}!
+            </p>
+          )}
+        </div>
         
-        {/* Category Badge */}
         {product.category && (
           <div className="mb-4">
             <span className="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-semibold uppercase">
@@ -278,7 +298,6 @@ const ProductDetail = () => {
           </div>
         )}
 
-        {/* Stock Status */}
         <p className="mb-4">
           <span className="font-semibold">Stock:</span>{" "}
           <span className={product.stock > 5 ? "text-green-600" : "text-red-600"}>
@@ -286,7 +305,6 @@ const ProductDetail = () => {
           </span>
         </p>
 
-        {/* Product Description */}
         {product.description && (
           <div className="mb-4">
             <h3 className="text-lg font-bold mb-2">Product Description:</h3>
@@ -294,7 +312,6 @@ const ProductDetail = () => {
           </div>
         )}
 
-        {/* Attributes */}
         {product.attributes && Object.keys(product.attributes).length > 0 && (
           <div className="mb-4">
             <h3 className="text-lg font-bold mb-2">Specifications:</h3>
@@ -308,7 +325,6 @@ const ProductDetail = () => {
           </div>
         )}
 
-        {/* Login Warning */}
         {!user && product.stock > 0 && (
           <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-600 rounded-lg">
             <p className="text-sm text-yellow-800 dark:text-yellow-300 font-semibold text-center">
@@ -317,7 +333,6 @@ const ProductDetail = () => {
           </div>
         )}
 
-        {/* Quantity + Buttons */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center border border-gray-400 dark:border-gray-600 rounded-full">
             <button
@@ -346,7 +361,6 @@ const ProductDetail = () => {
             🛒 ADD TO CART
           </motion.button>
 
-          {/* ✅ FIXED - Wishlist Button */}
           <button
             onClick={handleToggleWishlist}
             className="border border-gray-400 dark:border-gray-600 rounded-full w-10 h-10 flex items-center justify-center text-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition"
@@ -359,7 +373,6 @@ const ProductDetail = () => {
           </button>
         </div>
 
-        {/* Buy it now */}
         <button
           onClick={handleBuyNow}
           disabled={product.stock === 0}

@@ -11,12 +11,13 @@ import authRoutes from "./routes/authRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
+import promoCodeRoutes from "./routes/promoCodeRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-// CORS Configuration
+// ⭐ CORS Configuration - PATCH METHOD ADDED
 app.use(cors({
   origin: [
     "https://kniveproject.vercel.app",
@@ -25,13 +26,13 @@ app.use(cors({
     "http://localhost:5174"
   ],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // ⭐ PATCH ADDED
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 // Webhook route (before JSON parser)
-app.post("/api/payment/webhook", 
-  express.raw({ type: "application/json" }), 
+app.post("/api/payment/webhook",
+  express.raw({ type: "application/json" }),
   (req, res, next) => {
     req.url = '/webhook';
     paymentRoutes(req, res, next);
@@ -49,7 +50,7 @@ const createDefaultAdmin = async () => {
     if (adminExists) return;
 
     const hashedPassword = await bcrypt.hash('admin123', 10);
-    
+
     await User.create({
       name: 'Admin',
       email: 'admin@knives.com',
@@ -68,17 +69,18 @@ const createDefaultAdmin = async () => {
 
 // Root Route
 app.get("/", (req, res) => {
-  res.json({ 
-    message: "🚀 Knives Backend API", 
+  res.json({
+    message: "🚀 Knives Backend API",
     version: "1.0.0",
-    endpoints: { 
+    endpoints: {
       products: "/api/products",
       categories: "/api/categories",
-      admin: "/api/admin", 
+      admin: "/api/admin",
       orders: "/api/orders",
       auth: "/api/auth",
       contact: "/api/contact",
-      payment: "/api/payment"
+      payment: "/api/payment",
+      promocodes: "/api/promocodes"
     }
   });
 });
@@ -91,11 +93,12 @@ app.use("/api/auth", authRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/promocodes", promoCodeRoutes);
 
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ 
-    success: false, 
+  res.status(404).json({
+    success: false,
     message: `Route ${req.method} ${req.path} not found`
   });
 });
@@ -103,8 +106,8 @@ app.use((req, res) => {
 // Error Handler
 app.use((err, req, res, next) => {
   console.error("❌ Error:", err.message);
-  res.status(err.status || 500).json({ 
-    success: false, 
+  res.status(err.status || 500).json({
+    success: false,
     message: err.message || "Internal Server Error"
   });
 });

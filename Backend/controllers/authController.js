@@ -2,11 +2,41 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-// Generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || '123456', {
-    expiresIn: '30d',
+// ✅ Validate JWT secrets on startup
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL ERROR: JWT_SECRET is not defined in environment variables');
+}
+
+if (!process.env.JWT_REFRESH_SECRET) {
+  throw new Error('FATAL ERROR: JWT_REFRESH_SECRET is not defined in environment variables');
+}
+
+// ✅ Token blacklist (use Redis in production)
+const tokenBlacklist = new Set();
+
+// ✅ Generate Access Token (short-lived)
+const generateAccessToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '15m', // 15 minutes
   });
+};
+
+// ✅ Generate Refresh Token (long-lived)
+const generateRefreshToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: '7d', // 7 days
+  });
+};
+
+// ✅ Add token to blacklist
+export const blacklistToken = (token) => {
+  tokenBlacklist.add(token);
+  console.log('🚫 Token added to blacklist');
+};
+
+// ✅ Check if token is blacklisted
+export const isTokenBlacklisted = (token) => {
+  return tokenBlacklist.has(token);
 };
 
 // @desc    Register new user
@@ -55,6 +85,10 @@ export const register = async (req, res) => {
 
     if (user) {
       console.log('✅ User created successfully:', user.email);
+
+      const accessToken = generateAccessToken(user._id);
+      const refreshToken = generateRefreshToken(user._id);
+
       res.status(201).json({
         success: true,
         message: 'User registered successfully',
@@ -62,7 +96,9 @@ export const register = async (req, res) => {
           _id: user._id,
           name: user.name,
           email: user.email,
-          token: generateToken(user._id),
+          role: user.role,
+          token: accessToken,
+          refreshToken: refreshToken,
         },
       });
     }
@@ -128,9 +164,10 @@ export const login = async (req, res) => {
       });
     }
 
-    console.log('✅ Password matches! Generating token...');
-    const token = generateToken(user._id);
-    console.log('✅ Token generated:', token.substring(0, 20) + '...');
+    console.log('✅ Password matches! Generating tokens...');
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+    console.log('✅ Tokens generated');
 
     console.log('✅ Login successful for:', user.email);
     console.log('========================================\n');
@@ -143,7 +180,8 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role || 'customer',
-        token: token,
+        token: accessToken,
+        refreshToken: refreshToken,
       },
     });
   } catch (error) {
@@ -186,6 +224,116 @@ export const getProfile = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh
+// @access  Public (requires refresh token)
+export const refreshToken = async (req, res) => {
+  try {
+    console.log('🔄 REFRESH TOKEN ROUTE HIT');
+
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      console.log('❌ No refresh token provided');
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token required',
+      });
+    }
+
+    // Check if token is blacklisted
+    if (isTokenBlacklisted(refreshToken)) {
+      console.log('❌ Refresh token is blacklisted');
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid refresh token',
+      });
+    }
+
+    try {
+      // Verify refresh token
+      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+      console.log('✅ Refresh token verified for user:', decoded.id);
+
+      // Generate new access token
+      const newAccessToken = generateAccessToken(decoded.id);
+
+      // Optionally generate new refresh token (rotation)
+      const newRefreshToken = generateRefreshToken(decoded.id);
+
+      // Blacklist old refresh token
+      blacklistToken(refreshToken);
+
+      console.log('✅ New tokens generated');
+
+      res.status(200).json({
+        success: true,
+        message: 'Token refreshed successfully',
+        data: {
+          token: newAccessToken,
+          refreshToken: newRefreshToken,
+        },
+      });
+    } catch (tokenError) {
+      console.error('❌ Refresh token verification failed:', tokenError.message);
+
+      if (tokenError.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Refresh token expired, please login again',
+        });
+      }
+
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid refresh token',
+      });
+    }
+  } catch (error) {
+    console.error('❌ Refresh Token Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during token refresh',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+export const logout = async (req, res) => {
+  try {
+    console.log('🚪 LOGOUT ROUTE HIT');
+
+    const { refreshToken } = req.body;
+    const accessToken = req.headers.authorization?.split(' ')[1];
+
+    // Blacklist both tokens
+    if (accessToken) {
+      blacklistToken(accessToken);
+      console.log('✅ Access token blacklisted');
+    }
+
+    if (refreshToken) {
+      blacklistToken(refreshToken);
+      console.log('✅ Refresh token blacklisted');
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  } catch (error) {
+    console.error('❌ Logout Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during logout',
       error: error.message,
     });
   }

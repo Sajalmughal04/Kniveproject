@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,9 +11,9 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  
+
   const { loading, error } = useSelector((state) => state.auth);
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -55,6 +54,7 @@ const LoginPage = () => {
 
       if (response.data.success) {
         const token = response.data.data.token;
+        const refreshToken = response.data.data.refreshToken;
         const userData = {
           _id: response.data.data._id,
           name: response.data.data.name,
@@ -70,56 +70,74 @@ const LoginPage = () => {
           // Generate unique tab ID
           const tabId = sessionStorage.getItem('currentTabId') || `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           sessionStorage.setItem('currentTabId', tabId);
-          
+
           // Clear old admin session
           localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminRefreshToken');
           localStorage.removeItem('adminData');
           localStorage.removeItem('authorizedAdminTab');
           localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('userData');
-          
+
           // Save new admin session with this tab authorized
           localStorage.setItem('adminToken', token);
+          localStorage.setItem('adminRefreshToken', refreshToken);
           localStorage.setItem('adminData', JSON.stringify(userData));
           localStorage.setItem('authorizedAdminTab', tabId);
-          
+
           // Dispatch Redux
-          dispatch(loginSuccess({ user: userData, token }));
-          
+          dispatch(loginSuccess({
+            user: userData,
+            token,
+            refreshToken
+          }));
+
           // Clear form
           setFormData({ email: "", password: "" });
-          
+
           // Show success message
           dispatch(showToast(`Welcome Admin, ${userData.name}! 👑`));
-          
+
           setTimeout(() => {
-            navigate('/admin/dashboard', { replace: true });
+            // If there's a specific return url (like checkout), go there. 
+            // Otherwise default to admin dashboard for admins.
+            if (from && from !== '/') {
+              navigate(from, { replace: true });
+            } else {
+              navigate('/admin/dashboard', { replace: true });
+            }
           }, 100);
-          
+
           return;
         }
 
         // REGULAR USER LOGIN
-        dispatch(loginSuccess({ user: userData, token }));
+        dispatch(loginSuccess({
+          user: userData,
+          token,
+          refreshToken
+        }));
+
         setFormData({ email: "", password: "" });
         dispatch(showToast(`Welcome back, ${userData.name}! 🎉`));
-        
+
         setTimeout(() => {
           navigate(from, { replace: true });
         }, 100);
-        
+
       } else {
         dispatch(loginFailure("Login failed. Please try again."));
       }
     } catch (err) {
       let errorMessage = "An error occurred. Please try again.";
-      
+
       if (err.response) {
         errorMessage = err.response.data?.message || "Invalid email or password";
       } else if (err.request) {
         errorMessage = "Cannot connect to server. Please check if backend is running.";
       }
-      
+
       dispatch(loginFailure(errorMessage));
     }
   };

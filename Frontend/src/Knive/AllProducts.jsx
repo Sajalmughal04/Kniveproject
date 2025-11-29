@@ -2,10 +2,10 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { useDispatch } from "react-redux"; // ✅ Redux
-import { addToCart } from "../Redux/slice/cartSlice"; // ✅ Redux Action
+import { useDispatch } from "react-redux";
+import { addToCart } from "../Redux/slice/cartSlice";
 import { useWishlist } from "./WishlistContext";
-import { Heart } from "lucide-react";
+import { Heart, Tag } from "lucide-react";
 import SkeletonCard from "./SkeletonCard";
 import SkeletonImage from "./SkeletonImage";
 
@@ -13,7 +13,7 @@ const API_URL = "http://localhost:3000/api";
 
 const AllProducts = ({ searchTerm = "" }) => {
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // ✅ Redux Dispatch
+  const dispatch = useDispatch();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const hasFetched = useRef(false);
 
@@ -24,7 +24,6 @@ const AllProducts = ({ searchTerm = "" }) => {
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState("grid");
 
-  // ✅ ENHANCED - Fetch products with full debugging
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
@@ -39,54 +38,27 @@ const AllProducts = ({ searchTerm = "" }) => {
           params: { limit: 100 }
         });
         
-        console.log('📦 Full Response:', response);
         console.log('📦 Response Data:', response.data);
-        console.log('📦 Products Array:', response.data.products);
-        console.log('📦 Products Count:', response.data.products?.length);
         
-        // ✅ Validate products data
         const validProducts = (response.data.products || []).filter(
-          product => {
-            const isValid = product && product._id && product.title && product.price != null;
-            if (!isValid) {
-              console.warn('⚠️ Invalid product found:', product);
-            }
-            return isValid;
-          }
+          product => product && product._id && product.title && product.price != null
         );
         
-        console.log('✅ Valid Products:', validProducts);
-        console.log('✅ Valid Products Count:', validProducts.length);
-        
+        console.log('✅ Valid Products:', validProducts.length);
         setProducts(validProducts);
         
-        if (validProducts.length === 0) {
-          console.warn('⚠️ No valid products found!');
-        }
-        
-        if (validProducts.length < (response.data.products || []).length) {
-          console.warn('⚠️ Some products filtered due to invalid data');
-        }
       } catch (err) {
-        console.error("❌ Full Error:", err);
-        console.error("❌ Error Message:", err.message);
-        console.error("❌ Error Response:", err.response);
-        console.error("❌ Error Response Data:", err.response?.data);
-        console.error("❌ Error Response Status:", err.response?.status);
+        console.error("❌ Error:", err);
         setError(`Failed to load products: ${err.message}`);
       } finally {
         setLoading(false);
-        console.log('🏁 Loading finished');
       }
     };
 
     fetchProducts();
   }, []);
 
-  // Filter + sort
   const filteredProducts = useMemo(() => {
-    console.log('🔍 Filtering products. Total:', products.length);
-    
     let result = products.filter((product) => {
       const matchCategory =
         activeCategory === "all" || product.category === activeCategory;
@@ -96,17 +68,14 @@ const AllProducts = ({ searchTerm = "" }) => {
       return matchCategory && matchSearch;
     });
 
-    console.log('🔍 After filter:', result.length, 'products');
-
     if (sortOrder === "lowToHigh")
-      result.sort((a, b) => (a.price || 0) - (b.price || 0));
+      result.sort((a, b) => (a.finalPrice || a.price) - (b.finalPrice || b.price));
     else if (sortOrder === "highToLow")
-      result.sort((a, b) => (b.price || 0) - (a.price || 0));
+      result.sort((a, b) => (b.finalPrice || b.price) - (a.finalPrice || a.price));
     
     return result;
   }, [products, activeCategory, sortOrder, searchTerm]);
 
-  // ✅ Add to cart - NOW USING REDUX
   const handleAddToCart = (product, e) => {
     e.stopPropagation();
     
@@ -115,12 +84,13 @@ const AllProducts = ({ searchTerm = "" }) => {
       return;
     }
     
-    console.log('🛒 Adding to cart:', product.title);
+    // Use finalPrice if discount exists, otherwise use regular price
+    const priceToUse = product.hasDiscount ? product.finalPrice : product.price;
     
     dispatch(addToCart({ 
       id: product._id,
       name: product.title,
-      price: product.price,
+      price: priceToUse,
       image: product.images && product.images[0]?.url 
         ? product.images[0].url 
         : "https://via.placeholder.com/400",
@@ -128,7 +98,6 @@ const AllProducts = ({ searchTerm = "" }) => {
     }));
   };
 
-  // Toggle wishlist
   const handleToggleWishlist = (product, e) => {
     e.stopPropagation();
     
@@ -137,17 +106,19 @@ const AllProducts = ({ searchTerm = "" }) => {
       return;
     }
     
-    console.log('❤️ Toggling wishlist for:', product.title);
-    
     const wishlistItem = {
       id: product._id,
       _id: product._id,
       name: product.title,
       title: product.title,
-      price: product.price,
+      price: product.hasDiscount ? product.finalPrice : product.price,
+      originalPrice: product.price,
+      hasDiscount: product.hasDiscount,
+      discountType: product.discountType,
+      discountValue: product.discountValue,
       image: product.images && product.images.length > 0 
         ? product.images[0].url 
-        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23f3f4f6' width='400' height='400'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='24' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E",
+        : "https://via.placeholder.com/400",
       category: product.category,
       stock: product.stock,
       description: product.description
@@ -163,11 +134,9 @@ const AllProducts = ({ searchTerm = "" }) => {
     { id: "axes", label: "Axes" },
   ];
 
-  console.log('🎨 Rendering AllProducts. Loading:', loading, 'Products:', products.length, 'Filtered:', filteredProducts.length);
-
   return (
     <div className="bg-white dark:bg-black min-h-screen transition-colors duration-500">
-      {/* Minimal Header */}
+      {/* Header */}
       <div className="pt-28 pb-12 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -187,7 +156,7 @@ const AllProducts = ({ searchTerm = "" }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pb-20">
-        {/* Minimal Controls */}
+        {/* Controls */}
         <div className="flex flex-col lg:flex-row gap-6 items-center justify-between mb-12">
           {/* Category Filter */}
           <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
@@ -215,7 +184,7 @@ const AllProducts = ({ searchTerm = "" }) => {
                 className={`p-2 transition ${
                   viewMode === "grid"
                     ? "text-black dark:text-white"
-                    : "text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400"
+                    : "text-gray-400 dark:text-gray-600"
                 }`}
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -227,7 +196,7 @@ const AllProducts = ({ searchTerm = "" }) => {
                 className={`p-2 transition ${
                   viewMode === "list"
                     ? "text-black dark:text-white"
-                    : "text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400"
+                    : "text-gray-400 dark:text-gray-600"
                 }`}
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -258,17 +227,9 @@ const AllProducts = ({ searchTerm = "" }) => {
               exit={{ opacity: 0, y: -20 }}
               className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900 p-6 mb-8 flex items-center justify-between"
             >
-              <div>
-                <p className="text-red-800 dark:text-red-200 font-medium mb-2">{error}</p>
-                <p className="text-red-600 dark:text-red-400 text-sm">
-                  Check console (F12) for detailed error information
-                </p>
-              </div>
+              <p className="text-red-800 dark:text-red-200">{error}</p>
               <button 
-                onClick={() => {
-                  hasFetched.current = false;
-                  window.location.reload();
-                }} 
+                onClick={() => window.location.reload()} 
                 className="bg-black dark:bg-white text-white dark:text-black font-semibold px-6 py-2 hover:opacity-80 transition"
               >
                 Retry
@@ -276,15 +237,6 @@ const AllProducts = ({ searchTerm = "" }) => {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Loading State Debug Info */}
-        {loading && (
-          <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900">
-            <p className="text-blue-800 dark:text-blue-200 font-medium">
-              🔄 Loading products... Check console for details
-            </p>
-          </div>
-        )}
 
         {/* Product Grid/List */}
         <div className={viewMode === "grid" 
@@ -294,12 +246,12 @@ const AllProducts = ({ searchTerm = "" }) => {
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
             : filteredProducts.map((product, index) => {
-                if (!product || !product._id || !product.title || product.price == null) {
-                  console.warn('⚠️ Skipping invalid product in render:', product);
-                  return null;
-                }
+                if (!product || !product._id) return null;
                 
                 const inWishlist = isInWishlist(product._id);
+                const hasDiscount = product.hasDiscount && product.discountValue > 0;
+                const finalPrice = hasDiscount ? product.finalPrice : product.price;
+                const savings = hasDiscount ? product.price - finalPrice : 0;
 
                 return (
                   <motion.div
@@ -314,10 +266,8 @@ const AllProducts = ({ searchTerm = "" }) => {
                   >
                     <div className={`relative overflow-hidden bg-gray-100 dark:bg-gray-900 ${viewMode === "list" ? "w-64 flex-shrink-0" : ""}`}>
                       <SkeletonImage
-                        src={product.images && product.images.length > 0
-                          ? product.images[0].url
-                          : "https://via.placeholder.com/400"}
-                        alt={product.title || "Product"}
+                        src={product.images?.[0]?.url || "https://via.placeholder.com/400"}
+                        alt={product.title}
                         className={`object-cover transform transition-transform duration-700 group-hover:scale-105 ${
                           viewMode === "list" ? "w-full h-full" : "w-full h-80"
                         }`}
@@ -326,18 +276,33 @@ const AllProducts = ({ searchTerm = "" }) => {
                       {/* Wishlist Button */}
                       <button
                         onClick={(e) => handleToggleWishlist(product, e)}
-                        className="absolute top-4 right-4 bg-white dark:bg-black p-2 rounded-full hover:scale-110 transition shadow-lg"
+                        className="absolute top-4 right-4 bg-white dark:bg-black p-2 rounded-full hover:scale-110 transition shadow-lg z-10"
                       >
                         <Heart
                           size={20}
                           fill={inWishlist ? "red" : "none"}
-                          className={inWishlist ? "text-red-500" : "text-gray-400 dark:text-gray-600"}
+                          className={inWishlist ? "text-red-500" : "text-gray-400"}
                           strokeWidth={2}
                         />
                       </button>
                       
+                      {/* 🎯 DISCOUNT BADGE */}
+                      {hasDiscount && (
+                        <div className="absolute top-4 left-4 z-10">
+                          <div className="bg-gradient-to-r from-red-600 to-orange-500 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2">
+                            <Tag size={16} />
+                            <span className="font-bold text-sm">
+                              {product.discountType === 'percentage' 
+                                ? `-${product.discountValue}%`
+                                : `-$${product.discountValue}`
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Stock Badge */}
-                      {product.stock < 5 && product.stock > 0 && (
+                      {product.stock < 5 && product.stock > 0 && !hasDiscount && (
                         <div className="absolute top-4 left-4 bg-black dark:bg-white text-white dark:text-black px-3 py-1 text-xs font-semibold">
                           ONLY {product.stock} LEFT
                         </div>
@@ -355,20 +320,33 @@ const AllProducts = ({ searchTerm = "" }) => {
                         <h2 className="text-xl font-semibold text-black dark:text-white mb-2 line-clamp-2">
                           {product.title}
                         </h2>
-                        
-                        <p className="text-gray-500 dark:text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4">
-                          {product.description || "No description available"}
-                        </p>
                       </div>
 
                       <div className="mt-auto">
-                        <div className="flex items-center justify-between mb-4">
-                          <p className="text-2xl font-bold text-black dark:text-white">
-                            ${(product.price || 0).toFixed(2)}
-                          </p>
+                        {/* 💰 PRICING WITH DISCOUNT */}
+                        <div className="mb-4">
+                          {hasDiscount ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-3">
+                                <p className="text-2xl font-bold text-green-600">
+                                  ${finalPrice.toLocaleString()}
+                                </p>
+                                <p className="text-lg text-gray-400 line-through">
+                                  ${product.price.toLocaleString()}
+                                </p>
+                              </div>
+                              <p className="text-xs text-green-600 font-semibold">
+                                💰 Save ${savings.toLocaleString()}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-2xl font-bold text-black dark:text-white">
+                              ${product.price.toLocaleString()}
+                            </p>
+                          )}
                           
                           {product.stock > 0 && (
-                            <p className="text-xs text-gray-500 dark:text-gray-500 font-medium">
+                            <p className="text-xs text-gray-500 dark:text-gray-500 font-medium mt-1">
                               In Stock: {product.stock}
                             </p>
                           )}
@@ -409,11 +387,8 @@ const AllProducts = ({ searchTerm = "" }) => {
               <h3 className="text-3xl font-bold text-black dark:text-white mb-4">
                 No Products Found
               </h3>
-              <p className="text-gray-500 dark:text-gray-500 mb-4">
+              <p className="text-gray-500 dark:text-gray-500 mb-8">
                 Try adjusting your filters or search criteria
-              </p>
-              <p className="text-sm text-gray-400 dark:text-gray-600 mb-8">
-                Total products loaded: {products.length}
               </p>
               <div className="flex gap-4 justify-center">
                 <button

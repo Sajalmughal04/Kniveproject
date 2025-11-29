@@ -7,7 +7,9 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  uploadProductImage
+  uploadProductImage,
+  updateProductDiscount,  // ⭐ NEW
+  removeProductDiscount   // ⭐ NEW
 } from "../controllers/productController.js";
 import { protectAdmin } from "../Middleware/authMiddleware.js";
 
@@ -58,6 +60,22 @@ router.post(
   protectAdmin,
   upload.array('images', 5),
   uploadProductImage
+);
+
+// ⭐⭐⭐ DISCOUNT ROUTES - YE ADD KIYE HAIN ⭐⭐⭐
+
+// Apply or update discount on a product
+router.patch(
+  "/:id/discount",
+  protectAdmin,
+  updateProductDiscount
+);
+
+// Remove discount from a product
+router.delete(
+  "/:id/discount",
+  protectAdmin,
+  removeProductDiscount
 );
 
 export default router;

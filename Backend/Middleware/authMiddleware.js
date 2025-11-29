@@ -1,6 +1,12 @@
 // backend/Middleware/authMiddleware.js - ENHANCED WITH STRICT SESSION CHECKS
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { isTokenBlacklisted } from '../controllers/authController.js';
+
+// ✅ Validate JWT secret on startup
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL ERROR: JWT_SECRET is not defined in environment variables');
+}
 
 // ✅ Generate unique session ID
 const generateSessionId = () => {
@@ -14,7 +20,7 @@ const activeSessions = new Map();
 export const protectUser = async (req, res, next) => {
   try {
     console.log('🔐 protectUser: Checking authentication...');
-    
+
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -32,9 +38,18 @@ export const protectUser = async (req, res, next) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || '123456');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       console.log('✅ Token decoded successfully');
       console.log('👤 User ID from token:', decoded.id);
+
+      // ✅ Check if token is blacklisted
+      if (isTokenBlacklisted(token)) {
+        console.log('❌ Token is blacklisted (user logged out)');
+        return res.status(401).json({
+          success: false,
+          message: 'Token has been revoked. Please login again.',
+        });
+      }
 
       req.user = await User.findById(decoded.id).select('-password');
 
@@ -49,17 +64,17 @@ export const protectUser = async (req, res, next) => {
       console.log('✅ User authenticated:', req.user.email);
       console.log('👤 User role:', req.user.role);
       next();
-      
+
     } catch (tokenError) {
       console.error('❌ Token verification failed:', tokenError.message);
-      
+
       if (tokenError.name === 'TokenExpiredError') {
         return res.status(401).json({
           success: false,
           message: 'Token expired, please login again',
         });
       }
-      
+
       return res.status(401).json({
         success: false,
         message: 'Invalid token',
@@ -82,7 +97,7 @@ export const protectAdmin = async (req, res, next) => {
     console.log('🔐 Request path:', req.path);
     console.log('🔐 Request method:', req.method);
     console.log('🔐 ========================================');
-    
+
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -105,9 +120,18 @@ export const protectAdmin = async (req, res, next) => {
     try {
       // Verify token
       console.log('🔄 Verifying admin token...');
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || '123456');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       console.log('✅ Token decoded successfully');
       console.log('👤 User ID from token:', decoded.id);
+
+      // ✅ Check if token is blacklisted
+      if (isTokenBlacklisted(token)) {
+        console.log('❌ Token is blacklisted (admin logged out)');
+        return res.status(401).json({
+          success: false,
+          message: 'Token has been revoked. Please login again.',
+        });
+      }
 
       // Find user in database
       console.log('🔍 Looking up user in database...');
@@ -137,7 +161,7 @@ export const protectAdmin = async (req, res, next) => {
         console.log('❌ User email:', req.user.email);
         console.log('❌ Required role: admin');
         console.log('❌ ========================================');
-        
+
         return res.status(403).json({
           success: false,
           message: 'Access denied. Admin only.',
@@ -147,7 +171,7 @@ export const protectAdmin = async (req, res, next) => {
       // ✅ Check for session validity (optional but recommended)
       const sessionKey = `admin_${req.user._id}`;
       const currentSession = activeSessions.get(sessionKey);
-      
+
       if (currentSession && currentSession.token !== token) {
         console.log('⚠️  ========================================');
         console.log('⚠️  WARNING: MULTIPLE ADMIN SESSIONS DETECTED');
@@ -156,7 +180,7 @@ export const protectAdmin = async (req, res, next) => {
         console.log('⚠️  Stored token (first 20 chars):', currentSession.token.substring(0, 20));
         console.log('⚠️  This might be a security issue!');
         console.log('⚠️  ========================================');
-        
+
         // Optional: Uncomment to enforce single session per admin
         // return res.status(401).json({
         //   success: false,
@@ -179,16 +203,16 @@ export const protectAdmin = async (req, res, next) => {
       console.log('✅ Session updated');
       console.log('✅ GRANTING ACCESS');
       console.log('✅ ========================================');
-      
+
       next();
-      
+
     } catch (tokenError) {
       console.error('❌ ========================================');
       console.error('❌ TOKEN VERIFICATION FAILED');
       console.error('❌ Error type:', tokenError.name);
       console.error('❌ Error message:', tokenError.message);
       console.error('❌ ========================================');
-      
+
       if (tokenError.name === 'TokenExpiredError') {
         console.log('⏰ Token has expired');
         return res.status(401).json({
@@ -196,7 +220,7 @@ export const protectAdmin = async (req, res, next) => {
           message: 'Token expired, please login again',
         });
       }
-      
+
       if (tokenError.name === 'JsonWebTokenError') {
         console.log('🔒 Invalid token format');
         return res.status(401).json({
@@ -227,7 +251,7 @@ export const protectAdmin = async (req, res, next) => {
 export const cleanupSessions = () => {
   const now = new Date();
   const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-  
+
   for (const [key, session] of activeSessions.entries()) {
     if (now - session.lastAccess > maxAge) {
       console.log('🗑️  Removing expired session:', key);

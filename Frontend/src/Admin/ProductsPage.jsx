@@ -16,10 +16,11 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
     description: '',
     images: [''],
     featured: false,
-    attributes: [{ key: '', value: '' }]
+    attributes: [{ key: '', value: '' }],
+    discountType: 'none',
+    discountValue: ''
   });
 
-  // Get token from localStorage
   const getAuthHeaders = () => {
     const token = localStorage.getItem('adminToken');
     return {
@@ -28,7 +29,6 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
     };
   };
 
-  // ✅ UPDATED: Now accepts formData and uploadType parameters
   const handleProductSubmit = async (e, formData = null, uploadType = 'url') => {
     e.preventDefault();
     setLoading(true);
@@ -41,13 +41,11 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       let response;
       
       if (uploadType === 'file' && formData) {
-        // ✅ FILE UPLOAD METHOD
         console.log('📤 Uploading files to Cloudinary...');
         
         const token = localStorage.getItem('adminToken');
         
         if (editingProduct) {
-          // Update with files
           response = await axios.put(
             `${API_URL}/products/${editingProduct._id}`,
             formData,
@@ -59,7 +57,6 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
             }
           );
         } else {
-          // Create with files
           response = await axios.post(
             `${API_URL}/products`,
             formData,
@@ -73,15 +70,12 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
         }
         
       } else {
-        // ✅ URL METHOD
-        // Validate required fields
         if (!productForm.title || !productForm.price || !productForm.category) {
           alert('Please fill in all required fields!');
           setLoading(false);
           return;
         }
 
-        // Filter out empty images
         const validImages = productForm.images.filter(url => url.trim() !== '');
         
         if (validImages.length === 0) {
@@ -90,7 +84,6 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
           return;
         }
 
-        // Convert attributes array to object
         const attributesObject = {};
         productForm.attributes.forEach(attr => {
           if (attr.key.trim() && attr.value.trim()) {
@@ -104,14 +97,16 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
           stock: Number(productForm.stock) || 0,
           category: productForm.category.toLowerCase(),
           description: productForm.description.trim(),
-          imageUrls: validImages, // ✅ Send as imageUrls for backend to handle
+          imageUrls: validImages,
           uploadMethod: 'url',
           featured: productForm.featured || false,
-          attributes: attributesObject
+          attributes: attributesObject,
+          // ✅ ADD DISCOUNT FIELDS
+          discountType: productForm.discountType || 'none',
+          discountValue: productForm.discountType !== 'none' ? Number(productForm.discountValue) || 0 : 0
         };
 
         if (editingProduct) {
-          // Update existing product
           console.log('📝 Updating product:', editingProduct._id);
           response = await axios.put(
             `${API_URL}/products/${editingProduct._id}`,
@@ -119,7 +114,6 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
             { headers: getAuthHeaders() }
           );
         } else {
-          // Create new product
           console.log('➕ Creating new product');
           response = await axios.post(
             `${API_URL}/products`,
@@ -168,19 +162,24 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       description: '',
       images: [''],
       featured: false,
-      attributes: [{ key: '', value: '' }]
+      attributes: [{ key: '', value: '' }],
+      discountType: 'none',
+      discountValue: ''
     });
   };
 
+  // ✅ FIXED: Add discount fields when editing
   const handleEditProduct = (product) => {
+    console.log('✏️ Editing product:', product);
+    console.log('💰 Discount Type:', product.discountType);
+    console.log('💸 Discount Value:', product.discountValue);
+    
     setEditingProduct(product);
     
-    // Extract image URLs from images array
     const imageUrls = product.images?.length > 0 
       ? product.images.map(img => typeof img === 'string' ? img : img.url)
       : [''];
 
-    // Convert attributes object to array
     const attributesArray = product.attributes && typeof product.attributes === 'object'
       ? Object.entries(product.attributes).map(([key, value]) => ({ key, value }))
       : [{ key: '', value: '' }];
@@ -193,8 +192,12 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       description: product.description || '',
       images: imageUrls,
       featured: product.featured || false,
-      attributes: attributesArray.length > 0 ? attributesArray : [{ key: '', value: '' }]
+      attributes: attributesArray.length > 0 ? attributesArray : [{ key: '', value: '' }],
+      // ✅ ADD DISCOUNT FIELDS HERE
+      discountType: product.discountType || 'none',
+      discountValue: product.discountValue || ''
     });
+    
     setShowProductModal(true);
   };
 

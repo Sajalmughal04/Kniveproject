@@ -29,11 +29,11 @@ const UserProtectedRoute = ({ children }) => {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // Check if user is actually an admin (prevent admin from accessing user routes)
-  if (user?.role === 'admin') {
-    console.log('🚫 Admin user trying to access user route, redirecting to dashboard');
-    return <Navigate to="/Dashboard" replace />;
-  }
+  // Allow admins to access user routes (like checkout)
+  // if (user?.role === 'admin') {
+  //   console.log('🚫 Admin user trying to access user route, redirecting to dashboard');
+  //   return <Navigate to="/Dashboard" replace />;
+  // }
 
   // Authenticated user → Show content
   console.log('✅ User authenticated, showing protected content');

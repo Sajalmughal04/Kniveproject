@@ -1,145 +1,156 @@
 import React from 'react';
-import { Edit2, Trash2, Eye, Star } from 'lucide-react';
+import { Edit2, Trash2, Tag, TrendingDown } from 'lucide-react';
 
 export default function ProductsTable({ products, onEdit, onDelete }) {
-  
-  if (!products || products.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
-        <p className="text-gray-500 text-lg">No products found</p>
-        <p className="text-gray-400 text-sm mt-2">Click "Add Product" to create your first product</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-gray-50 border-b-2 border-gray-200">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Image
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Title
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Category
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Price
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Stock
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Category
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {products.map((product) => {
-              const imageUrl = product.images?.length > 0 
-                ? (typeof product.images[0] === 'string' ? product.images[0] : product.images[0].url)
-                : 'https://via.placeholder.com/100';
+              const hasDiscount = product.hasDiscount || (product.discountValue > 0 && product.discountType !== 'none');
+              const finalPrice = hasDiscount ? product.finalPrice : product.price;
+              const savings = hasDiscount ? product.price - finalPrice : 0;
 
               return (
                 <tr key={product._id} className="hover:bg-gray-50 transition">
-                  {/* Image */}
                   <td className="px-6 py-4">
-                    <div className="relative w-16 h-16">
-                      <img
-                        src={imageUrl}
-                        alt={product.title}
-                        className="w-full h-full object-cover rounded-lg"
-                        onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/100';
-                        }}
-                      />
-                      {product.featured && (
-                        <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
-                          <Star size={12} fill="white" stroke="white" />
-                        </div>
-                      )}
-                    </div>
+                    <img
+                      src={product.images?.[0]?.url || 'https://via.placeholder.com/80'}
+                      alt={product.title}
+                      className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                    />
                   </td>
-
-                  {/* Title */}
+                  
                   <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-900 line-clamp-2">
+                    <div className="max-w-xs">
+                      <p className="font-semibold text-gray-900 mb-1 line-clamp-1">
                         {product.title}
-                      </span>
-                      {product.slug && (
-                        <span className="text-xs text-gray-500 mt-1">
-                          /{product.slug}
+                      </p>
+                      <p className="text-sm text-gray-500 line-clamp-2">
+                        {product.description}
+                      </p>
+                      {product.featured && (
+                        <span className="inline-block mt-1 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">
+                          ⭐ Featured
                         </span>
                       )}
                     </div>
                   </td>
-
-                  {/* Category */}
+                  
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 capitalize">
+                    <div className="space-y-1">
+                      {hasDiscount ? (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <p className="text-lg font-bold text-green-600">
+                              Rs. {finalPrice?.toLocaleString() || '0'}
+                            </p>
+                            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                              {product.discountType === 'percentage' 
+                                ? `-${product.discountValue}%`
+                                : `-Rs. ${product.discountValue}`
+                              }
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-400 line-through">
+                            Rs. {product.price?.toLocaleString() || '0'}
+                          </p>
+                          <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                            <TrendingDown size={12} />
+                            Save Rs. {savings.toLocaleString()}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-lg font-bold text-gray-900">
+                          Rs. {product.price?.toLocaleString() || '0'}
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                  
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+                        product.stock === 0 
+                          ? 'bg-red-100 text-red-800'
+                          : product.stock < 5 
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-green-100 text-green-800'
+                      }`}>
+                        {product.stock}
+                      </span>
+                      {product.stock < 5 && product.stock > 0 && (
+                        <span className="text-xs text-yellow-600 font-medium">Low</span>
+                      )}
+                      {product.stock === 0 && (
+                        <span className="text-xs text-red-600 font-medium">Out</span>
+                      )}
+                    </div>
+                  </td>
+                  
+                  <td className="px-6 py-4">
+                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium capitalize">
                       {product.category}
                     </span>
                   </td>
-
-                  {/* Price */}
+                  
                   <td className="px-6 py-4">
-                    <span className="text-sm font-bold text-gray-900">
-                      ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      {hasDiscount && (
+                        <div className="flex items-center gap-1 text-xs text-orange-600 font-semibold bg-orange-50 px-2 py-1 rounded">
+                          <Tag size={12} />
+                          On Sale
+                        </div>
+                      )}
+                      <div className={`text-xs font-medium px-2 py-1 rounded ${
+                        product.stock > 0 
+                          ? 'text-green-700 bg-green-50'
+                          : 'text-red-700 bg-red-50'
+                      }`}>
+                        {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                      </div>
+                    </div>
                   </td>
-
-                  {/* Stock */}
-                  <td className="px-6 py-4">
-                    <span className={`text-sm font-semibold ${
-                      product.stock === 0 
-                        ? 'text-red-600' 
-                        : product.stock < 10 
-                          ? 'text-yellow-600' 
-                          : 'text-green-600'
-                    }`}>
-                      {product.stock}
-                    </span>
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                      product.stock > 0 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                  </td>
-
-                  {/* Actions */}
+                  
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
                       <button
-                        onClick={() => window.open(`/product/${product._id}`, '_blank')}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                        title="View Product"
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <button
                         onClick={() => onEdit(product)}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition"
                         title="Edit Product"
                       >
                         <Edit2 size={18} />
                       </button>
+                      
                       <button
                         onClick={() => onDelete(product._id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
                         title="Delete Product"
                       >
                         <Trash2 size={18} />
@@ -152,13 +163,12 @@ export default function ProductsTable({ products, onEdit, onDelete }) {
           </tbody>
         </table>
       </div>
-
-      {/* Table Footer */}
-      <div className="bg-gray-50 px-6 py-4 border-t">
-        <p className="text-sm text-gray-600">
-          Showing <span className="font-semibold">{products.length}</span> product{products.length !== 1 ? 's' : ''}
-        </p>
-      </div>
+      
+      {products.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">No products found</p>
+        </div>
+      )}
     </div>
   );
 }
