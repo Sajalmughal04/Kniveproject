@@ -22,7 +22,7 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
         { status: newStatus },
         { headers: getAuthHeaders() }
       );
-      
+
       if (response.data.success) {
         alert('✅ Order status updated!');
         fetchOrders();
@@ -41,14 +41,14 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
 
   const handleDeleteOrder = async (orderId) => {
     if (!confirm('Are you sure you want to delete this order?')) return;
-    
+
     setLoading(true);
     try {
       const response = await axios.delete(
         `${API_URL}/orders/${orderId}`,
         { headers: getAuthHeaders() }
       );
-      
+
       if (response.data.success) {
         alert('✅ Order deleted successfully!');
         fetchOrders();
@@ -63,16 +63,16 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'delivered':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-800 text-white';
       case 'shipped':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gray-600 text-white';
       case 'confirmed':
       case 'processing':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-gray-400 text-black';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-black text-white';
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-200 text-black';
     }
   };
 
@@ -83,15 +83,15 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
           <h2 className="text-3xl font-bold">Orders Management</h2>
           <p className="text-gray-600 mt-1">Total Orders: {orders.length}</p>
         </div>
-        <button 
+        <button
           onClick={fetchOrders}
-          className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+          className="flex items-center bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition border border-gray-700">
           <RefreshCw size={16} className="mr-2" />
           Refresh
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
@@ -109,7 +109,7 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
               {orders.map(order => (
                 <tr key={order._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-blue-600">
+                    <div className="font-semibold text-gray-900">
                       {order.orderNumber}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -127,7 +127,7 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
                       <span className="font-semibold">{order.items?.length || 0} items</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-bold text-green-600">
+                  <td className="px-6 py-4 font-bold text-gray-900">
                     Rs. {order.totalAmount?.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
@@ -161,14 +161,14 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleViewOrder(order)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                        className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition border border-gray-300"
                         title="View Details"
                       >
                         <Eye size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteOrder(order._id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        className="p-2 text-black hover:bg-gray-100 rounded-lg transition border border-gray-300"
                         title="Delete Order"
                       >
                         <Trash2 size={18} />
@@ -180,7 +180,7 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
             </tbody>
           </table>
         </div>
-        
+
         {orders.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             <ShoppingCart size={48} className="mx-auto mb-4 text-gray-300" />
@@ -242,7 +242,7 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
                         <p className="text-sm text-gray-600">Price: Rs. {item.price?.toFixed(2)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-green-600">
+                        <p className="font-bold text-gray-900">
                           Rs. {(item.price * item.quantity)?.toFixed(2)}
                         </p>
                       </div>
@@ -268,7 +268,7 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
                   </div>
                   <div className="flex justify-between text-xl font-bold border-t pt-2">
                     <span>Total:</span>
-                    <span className="text-green-600">Rs. {selectedOrder.totalAmount?.toFixed(2)}</span>
+                    <span className="text-gray-900">Rs. {selectedOrder.totalAmount?.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -282,7 +282,7 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
               )}
 
               {/* Order Info */}
-              <div className="bg-blue-50 p-4 rounded-lg space-y-1 text-sm">
+              <div className="bg-gray-100 p-4 rounded-lg space-y-1 text-sm border border-gray-300">
                 <p><span className="font-semibold">Status:</span> {selectedOrder.status}</p>
                 <p><span className="font-semibold">Payment Method:</span> {selectedOrder.paymentMethod}</p>
                 <p><span className="font-semibold">Order Date:</span> {new Date(selectedOrder.createdAt).toLocaleString()}</p>

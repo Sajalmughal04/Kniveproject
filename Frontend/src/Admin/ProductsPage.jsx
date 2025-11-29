@@ -32,24 +32,24 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
   const handleProductSubmit = async (e, formData = null, uploadType = 'url') => {
     e.preventDefault();
     setLoading(true);
-    
+
     console.log('🔍 Upload Type:', uploadType);
     console.log('🔍 API URL:', `${API_URL}/products`);
     console.log('🔍 Token exists:', !!localStorage.getItem('adminToken'));
-    
+
     try {
       let response;
-      
+
       if (uploadType === 'file' && formData) {
         console.log('📤 Uploading files to Cloudinary...');
-        
+
         const token = localStorage.getItem('adminToken');
-        
+
         if (editingProduct) {
           response = await axios.put(
             `${API_URL}/products/${editingProduct._id}`,
             formData,
-            { 
+            {
               headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data'
@@ -60,7 +60,7 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
           response = await axios.post(
             `${API_URL}/products`,
             formData,
-            { 
+            {
               headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data'
@@ -68,7 +68,7 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
             }
           );
         }
-        
+
       } else {
         if (!productForm.title || !productForm.price || !productForm.category) {
           alert('Please fill in all required fields!');
@@ -77,7 +77,7 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
         }
 
         const validImages = productForm.images.filter(url => url.trim() !== '');
-        
+
         if (validImages.length === 0) {
           alert('Please add at least one image URL!');
           setLoading(false);
@@ -101,7 +101,6 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
           uploadMethod: 'url',
           featured: productForm.featured || false,
           attributes: attributesObject,
-          // ✅ ADD DISCOUNT FIELDS
           discountType: productForm.discountType || 'none',
           discountValue: productForm.discountType !== 'none' ? Number(productForm.discountValue) || 0 : 0
         };
@@ -122,9 +121,9 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
           );
         }
       }
-      
+
       console.log('✅ Response:', response.data);
-      
+
       if (response.data.success) {
         alert(editingProduct ? 'Product updated successfully! ✅' : 'Product added successfully! ✅');
         fetchProducts();
@@ -132,14 +131,14 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
         setEditingProduct(null);
         resetForm();
       }
-      
+
     } catch (error) {
       console.error('❌ Full error object:', error);
       console.error('❌ Error response:', error.response);
       console.error('❌ Error message:', error.message);
-      
+
       if (error.code === 'ERR_NETWORK') {
-        alert('❌ Network Error! Backend server is not running.\n\nPlease start backend: cd backend && npm start');
+        alert('❌ Network Error! Backend server is not running.\\n\\nPlease start backend: cd backend && npm start');
       } else if (error.response?.status === 401) {
         alert('❌ Authentication failed! Please login again.');
         localStorage.removeItem('adminToken');
@@ -147,7 +146,7 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       } else if (error.response?.status === 400) {
         alert(`❌ Validation Error: ${error.response?.data?.message || 'Invalid data'}`);
       } else {
-        alert(`❌ Failed to save product!\n\nError: ${error.response?.data?.message || error.message}\n\nCheck console for details.`);
+        alert(`❌ Failed to save product!\\n\\nError: ${error.response?.data?.message || error.message}\\n\\nCheck console for details.`);
       }
     }
     setLoading(false);
@@ -168,15 +167,14 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
     });
   };
 
-  // ✅ FIXED: Add discount fields when editing
   const handleEditProduct = (product) => {
     console.log('✏️ Editing product:', product);
     console.log('💰 Discount Type:', product.discountType);
     console.log('💸 Discount Value:', product.discountValue);
-    
+
     setEditingProduct(product);
-    
-    const imageUrls = product.images?.length > 0 
+
+    const imageUrls = product.images?.length > 0
       ? product.images.map(img => typeof img === 'string' ? img : img.url)
       : [''];
 
@@ -193,24 +191,23 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       images: imageUrls,
       featured: product.featured || false,
       attributes: attributesArray.length > 0 ? attributesArray : [{ key: '', value: '' }],
-      // ✅ ADD DISCOUNT FIELDS HERE
       discountType: product.discountType || 'none',
       discountValue: product.discountValue || ''
     });
-    
+
     setShowProductModal(true);
   };
 
   const handleDeleteProduct = async (id) => {
     if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
-    
+
     setLoading(true);
     try {
       const response = await axios.delete(
         `${API_URL}/products/${id}`,
         { headers: getAuthHeaders() }
       );
-      
+
       if (response.data.success) {
         alert('Product deleted successfully! ✅');
         fetchProducts();
@@ -239,37 +236,39 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
     const category = p.category || '';
     const description = p.description || '';
     const searchLower = searchTerm.toLowerCase();
-    
+
     return title.toLowerCase().includes(searchLower) ||
-           category.toLowerCase().includes(searchLower) ||
-           description.toLowerCase().includes(searchLower);
+      category.toLowerCase().includes(searchLower) ||
+      description.toLowerCase().includes(searchLower);
   });
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-3xl font-bold">Products Management</h2>
+      {/* Header with Title and Buttons */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+        <div className="mb-4 md:mb-0">
+          <h2 className="text-3xl font-bold text-gray-800">Products Management</h2>
           <p className="text-gray-600 mt-1">
             Total Products: {products.length} | Showing: {filteredProducts.length}
           </p>
         </div>
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={fetchProducts}
-            className="flex items-center bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+            className="flex items-center bg-white text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition border border-gray-300 shadow-sm">
             <RefreshCw size={16} className="mr-2" />
             Refresh
           </button>
-          <button 
+          <button
             onClick={handleAddNew}
-            className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+            className="flex items-center bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition shadow-sm">
             <Plus size={20} className="mr-2" />
             Add Product
           </button>
         </div>
       </div>
 
+      {/* Search Bar */}
       <div className="mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-3 text-gray-400" size={20} />
@@ -278,23 +277,26 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
             placeholder="Search by title, category, or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
           />
         </div>
       </div>
 
+      {/* No Results Message */}
       {filteredProducts.length === 0 && searchTerm && (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-gray-500 text-lg">No products found matching "{searchTerm}"</p>
         </div>
       )}
 
-      <ProductsTable 
+      {/* Products Table */}
+      <ProductsTable
         products={filteredProducts}
         onEdit={handleEditProduct}
         onDelete={handleDeleteProduct}
       />
 
+      {/* Product Modal */}
       {showProductModal && (
         <ProductModal
           editingProduct={editingProduct}

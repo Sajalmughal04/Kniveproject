@@ -82,6 +82,45 @@ export const getAllPromoCodes = async (req, res) => {
     }
 };
 
+// @desc    Update a promo code
+// @route   PUT /api/promocodes/:id
+// @access  Private/Admin
+export const updatePromoCode = async (req, res) => {
+    try {
+        const { code, discountType, discountValue, expirationDate, usageLimit, isActive } = req.body;
+
+        const promoCode = await PromoCode.findById(req.params.id);
+
+        if (!promoCode) {
+            return res.status(404).json({ success: false, message: 'Promo code not found' });
+        }
+
+        // Check if code is being changed and if new code already exists
+        if (code && code !== promoCode.code) {
+            const codeExists = await PromoCode.findOne({ code });
+            if (codeExists) {
+                return res.status(400).json({ success: false, message: 'Promo code already exists' });
+            }
+        }
+
+        promoCode.code = code || promoCode.code;
+        promoCode.discountType = discountType || promoCode.discountType;
+        promoCode.discountValue = discountValue !== undefined ? discountValue : promoCode.discountValue;
+        promoCode.expirationDate = expirationDate || promoCode.expirationDate;
+        promoCode.usageLimit = usageLimit !== undefined ? usageLimit : promoCode.usageLimit;
+        promoCode.isActive = isActive !== undefined ? isActive : promoCode.isActive;
+
+        const updatedPromoCode = await promoCode.save();
+
+        res.status(200).json({
+            success: true,
+            data: updatedPromoCode,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // @desc    Delete a promo code
 // @route   DELETE /api/promocodes/:id
 // @access  Private/Admin

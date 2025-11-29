@@ -3,21 +3,21 @@ import React from 'react';
 
 export default function StatsCard({ label, value, icon: Icon, gradient, textColor, customIcon }) {
   return (
-    <div className={`bg-gradient-to-br ${gradient} p-6 rounded-lg shadow-lg text-white transform hover:scale-105 transition-transform duration-200`}>
+    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center justify-between">
         <div>
-          <p className={`${textColor} text-sm font-medium uppercase tracking-wide`}>
+          <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">
             {label}
           </p>
-          <p className="text-3xl font-bold mt-2">
+          <p className="text-3xl font-bold mt-2 text-gray-900">
             {value}
           </p>
         </div>
-        <div className="opacity-80">
+        <div className="bg-gray-100 p-3 rounded-lg">
           {Icon ? (
-            <Icon size={48} />
+            <Icon size={28} className="text-gray-600" />
           ) : (
-            <div className="text-5xl">{customIcon}</div>
+            <div className="text-3xl">{customIcon}</div>
           )}
         </div>
       </div>

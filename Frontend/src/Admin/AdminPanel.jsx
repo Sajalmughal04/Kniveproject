@@ -8,6 +8,7 @@ import Dashboard from "./Dashboard";
 import ProductsPage from "./ProductsPage";
 import OrdersPage from "./OrdersPage";
 import CustomersPage from "./CustomersPage";
+import PromoCodesPage from "./PromoCodesPage";
 import LoadingIndicator from "./LoadingIndicator";
 
 const API_URL = "http://localhost:3000/api";
@@ -49,7 +50,7 @@ export default function AdminPanel() {
     try {
       setupAxios();
       const response = await axios.get(`${API_URL}/orders`);
-      
+
       if (response.data.success) {
         setOrders(response.data.orders || []);
       } else {
@@ -66,13 +67,13 @@ export default function AdminPanel() {
     setLoading(true);
     try {
       setupAxios();
-      
+
       const response = await axios.get(`${API_URL}/orders`);
       const ordersData = response.data.orders || [];
-      
+
       const uniqueCustomers = [];
       const emailSet = new Set();
-      
+
       ordersData.forEach(order => {
         if (order.customerInfo && !emailSet.has(order.customerInfo.email)) {
           emailSet.add(order.customerInfo.email);
@@ -89,7 +90,7 @@ export default function AdminPanel() {
           });
         }
       });
-      
+
       setCustomers(uniqueCustomers);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -108,27 +109,21 @@ export default function AdminPanel() {
     totalProducts: products.length,
     totalOrders: orders.length,
     totalCustomers: customers.length,
-    revenue: Array.isArray(orders) 
-      ? orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0) 
+    revenue: Array.isArray(orders)
+      ? orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0)
       : 0
   };
 
-  // ✅ FIXED LOGOUT - Clears everything
   const handleLogout = () => {
     console.log('🚪 AdminPanel Logout Called');
-    
-    // Clear axios headers
+
     axios.defaults.headers.common["Authorization"] = null;
-    
-    // Dispatch Redux logout (this clears everything)
     dispatch(reduxLogout());
-    
-    // Navigate to home
     navigate('/', { replace: true });
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
@@ -145,9 +140,9 @@ export default function AdminPanel() {
 
         <div className="p-8">
           {currentPage === "dashboard" && (
-            <Dashboard 
-              stats={stats} 
-              products={products} 
+            <Dashboard
+              stats={stats}
+              products={products}
               orders={orders}
               onLogout={handleLogout}
             />
@@ -172,9 +167,15 @@ export default function AdminPanel() {
           )}
 
           {currentPage === "customers" && (
-            <CustomersPage 
-              customers={customers} 
-              fetchCustomers={fetchCustomers} 
+            <CustomersPage
+              customers={customers}
+              fetchCustomers={fetchCustomers}
+            />
+          )}
+
+          {currentPage === "promocodes" && (
+            <PromoCodesPage
+              API_URL={API_URL}
             />
           )}
         </div>

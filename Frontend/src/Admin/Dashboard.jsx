@@ -1,5 +1,3 @@
-// Dashboard.jsx - COMPLETE WITH LOGOUT CONFIRMATION
-
 import React from 'react';
 import { Package, ShoppingCart, Users, RefreshCw, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -10,113 +8,83 @@ import StatsCard from './StatsCard';
 export default function Dashboard({ stats = {}, products = [], orders = [], onLogout }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+
   const adminData = React.useMemo(() => {
     const data = localStorage.getItem('adminData');
     return data ? JSON.parse(data) : { name: 'Admin', email: '' };
   }, []);
 
-  // ✅ COMPLETE LOGOUT FUNCTION WITH CONFIRMATION
   const handleLogout = () => {
-    // Ask for confirmation
     const confirmed = window.confirm('Are you sure you want to logout?');
-    
+
     if (!confirmed) {
       console.log('❌ Logout cancelled by user');
       return;
     }
-    
-    console.log('👋 ========================================');
-    console.log('👋 DASHBOARD LOGOUT INITIATED');
-    console.log('👋 ========================================');
-    
-    // Dispatch Redux logout (clears everything)
+
     dispatch(userLogout());
-    
-    // If onLogout prop provided, use it
+
     if (onLogout) {
       onLogout();
     } else {
-      // Otherwise redirect manually
       navigate('/', { replace: true });
     }
-    
-    console.log('✅ LOGOUT COMPLETE');
   };
 
   const statsData = [
-    { 
-      label: 'Total Products', 
-      value: stats?.totalProducts ?? 0, 
-      icon: Package, 
-      gradient: 'from-blue-500 to-blue-600', 
-      textColor: 'text-blue-100' 
+    {
+      label: 'Total Products',
+      value: stats?.totalProducts ?? 0,
+      icon: Package
     },
-    { 
-      label: 'Total Orders', 
-      value: stats?.totalOrders ?? 0, 
-      icon: ShoppingCart, 
-      gradient: 'from-green-500 to-green-600', 
-      textColor: 'text-green-100' 
+    {
+      label: 'Total Orders',
+      value: stats?.totalOrders ?? 0,
+      icon: ShoppingCart
     },
-    { 
-      label: 'Total Customers', 
-      value: stats?.totalCustomers ?? 0, 
-      icon: Users, 
-      gradient: 'from-purple-500 to-purple-600', 
-      textColor: 'text-purple-100' 
+    {
+      label: 'Total Customers',
+      value: stats?.totalCustomers ?? 0,
+      icon: Users
     },
-    { 
-      label: 'Total Revenue', 
-      value: `$${Number(stats?.revenue || 0).toLocaleString()}`, 
-      icon: null, 
-      gradient: 'from-orange-500 to-orange-600', 
-      textColor: 'text-orange-100', 
-      customIcon: '💰' 
+    {
+      label: 'Total Revenue',
+      value: `$${Number(stats?.revenue || 0).toLocaleString()}`,
+      icon: null,
+      customIcon: '💰'
     }
   ];
 
   return (
     <div>
-      {/* Header with Admin Info & Logout */}
-      <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow">
-        <div>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div className="mb-4 md:mb-0">
           <h2 className="text-3xl font-bold text-gray-800">Dashboard</h2>
-          <p className="text-sm text-gray-600 mt-1">Welcome back, {adminData.name}!</p>
+          <p className="text-sm text-gray-500 mt-1">Welcome back, {adminData.name}!</p>
         </div>
-        
-        <div className="flex items-center space-x-3">
-          {/* Admin Info */}
-          <div className="hidden md:flex items-center space-x-2 text-gray-700 bg-gray-50 px-4 py-2 rounded-lg">
-            <User size={18} />
-            <div className="text-sm">
-              <p className="font-medium">{adminData.name}</p>
-              <p className="text-xs text-gray-500">{adminData.email}</p>
-            </div>
-          </div>
 
+        <div className="flex items-center space-x-3">
           {/* Refresh Button */}
-          <button 
+          <button
             onClick={() => window.location.reload()}
-            className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-            title="Refresh Dashboard"
+            className="flex items-center bg-white text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition border border-gray-300 shadow-sm"
           >
             <RefreshCw size={16} className="md:mr-2" />
             <span className="hidden md:inline">Refresh</span>
           </button>
 
-          {/* ✅ LOGOUT BUTTON WITH CONFIRMATION */}
+          {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-bold"
-            title="Logout and Clear Session"
+            className="flex items-center space-x-2 bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900 transition-all duration-200 shadow-sm font-medium"
           >
             <LogOut size={20} />
-            <span className="hidden md:inline">LOGOUT</span>
+            <span className="hidden md:inline">Logout</span>
           </button>
         </div>
       </div>
-      
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statsData.map((stat, index) => (
@@ -127,12 +95,12 @@ export default function Dashboard({ stats = {}, products = [], orders = [], onLo
       {/* Recent Orders & Low Stock Products */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Orders */}
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <h3 className="text-xl font-bold mb-4 text-gray-800">Recent Orders</h3>
           <div className="space-y-3">
             {orders && orders.length > 0 ? (
               orders.slice(0, 5).map(order => (
-                <div key={order._id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition">
+                <div key={order._id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition border border-gray-100">
                   <div>
                     <p className="font-semibold text-gray-800">
                       {order.customerName || 'Guest Customer'}
@@ -141,12 +109,11 @@ export default function Dashboard({ stats = {}, products = [], orders = [], onLo
                       ${order.totalAmount?.toFixed(2) || '0.00'}
                     </p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                    order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                    order.status === 'processing' ? 'bg-purple-100 text-purple-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                      order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
+                        order.status === 'processing' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                    }`}>
                     {order.status || 'pending'}
                   </span>
                 </div>
@@ -158,13 +125,13 @@ export default function Dashboard({ stats = {}, products = [], orders = [], onLo
         </div>
 
         {/* Low Stock Products */}
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <h3 className="text-xl font-bold mb-4 text-gray-800">Low Stock Products</h3>
           <div className="space-y-3">
             {products && products.length > 0 ? (
               products.filter(p => p.stock < 10).length > 0 ? (
                 products.filter(p => p.stock < 10).map(product => (
-                  <div key={product._id} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition">
+                  <div key={product._id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition border border-gray-100">
                     <div>
                       <p className="font-semibold text-gray-800">
                         {product.title || product.name}
@@ -173,11 +140,10 @@ export default function Dashboard({ stats = {}, products = [], orders = [], onLo
                         {product.category}
                       </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      product.stock === 0 ? 'bg-red-100 text-red-800' :
-                      product.stock < 5 ? 'bg-orange-100 text-orange-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${product.stock === 0 ? 'bg-red-100 text-red-700' :
+                        product.stock < 5 ? 'bg-orange-100 text-orange-700' :
+                          'bg-green-100 text-green-700'
+                      }`}>
                       Stock: {product.stock}
                     </span>
                   </div>
