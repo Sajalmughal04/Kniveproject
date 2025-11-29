@@ -258,209 +258,119 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium mb-2 text-gray-700">
-                    Discount Type
-                  </label>
-                  <select
-                    {productForm?.price && productForm?.discountValue && productForm?.discountValue > 0 && productForm?.discountType !== 'none' && (
-                      <div className="mt-4 p-3 bg-white rounded-lg border border-orange-200">
-                        <div className="flex items-center justify-between text-sm">
-                          <div>
-                            <p className="text-gray-600">Original Price:</p>
-                            <p className="text-lg font-bold text-gray-400 line-through">
-                              Rs. {parseFloat(productForm?.price || 0).toLocaleString()}
-                            </p>
-                          </div>
+                <select
+                  name="category"
+                  value={productForm?.category || ''}
+                  onChange={handleInputChange}
+                  className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  <option value="kitchen">🔪 Kitchen Knives</option>
+                  <option value="swords">⚔️ Swords</option>
+                  <option value="axes">🪓 Axes</option>
+                </select>
+              </div>
 
-                          <div className="text-center">
-                            <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold inline-block mb-1">
-                              {productForm?.discountType === 'percentage'
-                                ? `-${productForm?.discountValue}%`
-                                : `-Rs. ${productForm?.discountValue}`
-                              }
-                            </div>
-                            <p className="text-xs text-gray-500">Discount</p>
-                          </div>
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Description</label>
+                <textarea
+                  name="description"
+                  value={productForm?.description || ''}
+                  onChange={handleInputChange}
+                  className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                />
+              </div>
 
-                          <div className="text-right">
-                            <p className="text-gray-600">Final Price:</p>
-                            <p className="text-lg font-bold text-green-600">
-                              Rs. {finalPrice.toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
+              {/* Image Upload */}
+              <div className="border-t pt-4">
+                <label className="block text-sm font-medium mb-3">Images *</label>
 
-                        <div className="mt-2 text-center">
-                          <p className="text-xs text-green-600 font-semibold">
-                            💰 Customer saves Rs. {savings.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-            </div>
-
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Category *</label>
-                  <select
-                    name="category"
-                    value={productForm?.category || ''}
-                    onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                    required
+                <div className="flex gap-4 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setUploadMethod('url')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition ${uploadMethod === 'url'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                      }`}
                   >
-                    <option value="">Select Category</option>
-                    <option value="kitchen">🔪 Kitchen Knives</option>
-                    <option value="swords">⚔️ Swords</option>
-                    <option value="axes">🪓 Axes</option>
-                  </select>
+                    <Link size={18} />
+                    Image URL
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setUploadMethod('file')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition ${uploadMethod === 'file'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                  >
+                    <Upload size={18} />
+                    Upload Files
+                  </button>
                 </div>
 
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
-                  <textarea
-                    name="description"
-                    value={productForm?.description || ''}
-                    onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                    rows="3"
-                  />
-                </div>
+                {uploadMethod === 'file' ? (
+                  <div>
+                    <label className="block w-full">
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 cursor-pointer transition">
+                        <Upload className="mx-auto mb-2 text-gray-400" size={32} />
+                        <p className="text-sm text-gray-600">
+                          Click to upload images or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          PNG, JPG, WEBP up to 5MB (Max 5 images)
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
 
-                {/* Image Upload */}
-                <div className="border-t pt-4">
-                  <label className="block text-sm font-medium mb-3">Images *</label>
-
-                  <div className="flex gap-4 mb-4">
-                    <button
-                      type="button"
-                      onClick={() => setUploadMethod('url')}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition ${uploadMethod === 'url'
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                    >
-                      <Link size={18} />
-                      Image URL
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setUploadMethod('file')}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition ${uploadMethod === 'file'
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                    >
-                      <Upload size={18} />
-                      Upload Files
-                    </button>
-                  </div>
-
-                  {uploadMethod === 'file' ? (
-                    <div>
-                      <label className="block w-full">
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 cursor-pointer transition">
-                          <Upload className="mx-auto mb-2 text-gray-400" size={32} />
-                          <p className="text-sm text-gray-600">
-                            Click to upload images or drag and drop
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            PNG, JPG, WEBP up to 5MB (Max 5 images)
-                          </p>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                      </label>
-
-                      {previewUrls.length > 0 && (
-                        <div className="mt-4 grid grid-cols-3 gap-4">
-                          {previewUrls.map((url, index) => (
-                            <div key={index} className="relative group">
-                              <img
-                                src={url}
-                                alt={`Preview ${index + 1}`}
-                                className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeFilePreview(index)}
-                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition hover:bg-red-600"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {(productForm?.images || ['']).map((image, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input
-                            type="url"
-                            value={image}
-                            onChange={(e) => handleImageChange(index, e.target.value)}
-                            placeholder="https://example.com/image.jpg"
-                            className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                          />
-                          {(productForm?.images?.length || 0) > 1 && (
+                    {previewUrls.length > 0 && (
+                      <div className="mt-4 grid grid-cols-3 gap-4">
+                        {previewUrls.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={url}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                            />
                             <button
                               type="button"
-                              onClick={() => removeImageField(index)}
-                              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                              onClick={() => removeFilePreview(index)}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition hover:bg-red-600"
                             >
-                              <Trash2 size={18} />
+                              <X size={16} />
                             </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={addImageField}
-                        className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1 hover:underline"
-                      >
-                        <Plus size={16} />
-                        Add another URL
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Attributes */}
-                <div className="border-t pt-4">
-                  <label className="block text-sm font-medium mb-3">
-                    Attributes (Optional)
-                  </label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
                   <div className="space-y-2">
-                    {(productForm?.attributes || [{ key: '', value: '' }]).map((attr, index) => (
+                    {(productForm?.images || ['']).map((image, index) => (
                       <div key={index} className="flex gap-2">
                         <input
-                          type="text"
-                          placeholder="Key"
-                          value={attr.key}
-                          onChange={(e) => handleAttributeChange(index, 'key', e.target.value)}
+                          type="url"
+                          value={image}
+                          onChange={(e) => handleImageChange(index, e.target.value)}
+                          placeholder="https://example.com/image.jpg"
                           className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
                         />
-                        <input
-                          type="text"
-                          placeholder="Value"
-                          value={attr.value}
-                          onChange={(e) => handleAttributeChange(index, 'value', e.target.value)}
-                          className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                        />
-                        {(productForm?.attributes?.length || 0) > 1 && (
+                        {(productForm?.images?.length || 0) > 1 && (
                           <button
                             type="button"
-                            onClick={() => removeAttribute(index)}
+                            onClick={() => removeImageField(index)}
                             className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                           >
                             <Trash2 size={18} />
@@ -470,63 +380,108 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
                     ))}
                     <button
                       type="button"
-                      onClick={addAttribute}
+                      onClick={addImageField}
                       className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1 hover:underline"
                     >
                       <Plus size={16} />
-                      Add attribute
+                      Add another URL
                     </button>
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Featured */}
-                <div className="flex items-center gap-2 border-t pt-4">
-                  <input
-                    type="checkbox"
-                    id="featured"
-                    name="featured"
-                    checked={productForm?.featured || false}
-                    onChange={handleInputChange}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <label htmlFor="featured" className="text-sm font-medium cursor-pointer">
-                    ⭐ Featured Product
-                  </label>
+              {/* Attributes */}
+              <div className="border-t pt-4">
+                <label className="block text-sm font-medium mb-3">
+                  Attributes (Optional)
+                </label>
+                <div className="space-y-2">
+                  {(productForm?.attributes || [{ key: '', value: '' }]).map((attr, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Key"
+                        value={attr.key}
+                        onChange={(e) => handleAttributeChange(index, 'key', e.target.value)}
+                        className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Value"
+                        value={attr.value}
+                        onChange={(e) => handleAttributeChange(index, 'value', e.target.value)}
+                        className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                      />
+                      {(productForm?.attributes?.length || 0) > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeAttribute(index)}
+                          className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addAttribute}
+                    className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1 hover:underline"
+                  >
+                    <Plus size={16} />
+                    Add attribute
+                  </button>
                 </div>
               </div>
 
-              {/* Submit Buttons */}
-              <div className="flex gap-3 mt-6 pt-6 border-t">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium transition shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                >
-                  {editingProduct ? (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Update Product
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add Product
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-medium transition"
-                >
-                  Cancel
-                </button>
+              {/* Featured */}
+              <div className="flex items-center gap-2 border-t pt-4">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  name="featured"
+                  checked={productForm?.featured || false}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <label htmlFor="featured" className="text-sm font-medium cursor-pointer">
+                  ⭐ Featured Product
+                </label>
               </div>
-            </form>
-          </div>
+            </div>
+
+            {/* Submit Buttons */}
+            <div className="flex gap-3 mt-6 pt-6 border-t">
+              <button
+                type="submit"
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium transition shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+              >
+                {editingProduct ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Update Product
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Product
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-medium transition"
+              >
+                Cancel
+              </button>
+            </div>
+        </form>
       </div>
-      );
+    </div>
+  );
 }
