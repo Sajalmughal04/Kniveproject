@@ -218,14 +218,18 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
           {/* Category */}
           <div>
             <label className="block text-sm font-medium mb-2">Category *</label>
-            <input
-              type="text"
+            <select
               name="category"
               value={productForm?.category || ''}
               onChange={handleInputChange}
               className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
               required
-            />
+            >
+              <option value="">Select Category</option>
+              <option value="Kitchen Knives">Kitchen Knives</option>
+              <option value="Swords">Swords</option>
+              <option value="Axes">Axes</option>
+            </select>
           </div>
 
           {/* Price and Stock */}
@@ -291,7 +295,7 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
             {savings > 0 && (
               <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-800">
-                  <strong>Final Price:</strong> PKR {finalPrice.toFixed(2)} 
+                  <strong>Final Price:</strong> PKR {finalPrice.toFixed(2)}
                   <span className="ml-2 text-green-600">(Save PKR {savings.toFixed(2)})</span>
                 </p>
               </div>
@@ -507,6 +511,6 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
