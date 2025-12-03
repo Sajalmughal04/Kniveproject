@@ -7,7 +7,7 @@ import { addToCart } from "../Redux/slice/cartSlice"; // Update path according t
 import SkeletonCard from "./SkeletonCard";
 import SkeletonImage from "./SkeletonImage";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://kniveproject-ewyu.vercel.app/api";
 
 const CategoryPage = () => {
   const { slug } = useParams();

@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = 'http://localhost:3000/api';
+  const API_URL = 'https://kniveproject-ewyu.vercel.app/api';
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email, password })
       });
       const data = await response.json();
-      
+
       if (data.success) {
         localStorage.setItem('token', data.token);
         setUser(data.user);
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ name, email, password })
       });
       const data = await response.json();
-      
+
       if (data.success) {
         localStorage.setItem('token', data.token);
         setUser(data.user);
@@ -131,7 +131,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, register } = useAuth();
-  
+
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({

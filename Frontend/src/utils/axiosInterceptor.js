@@ -1,7 +1,7 @@
 // Frontend/src/utils/axiosInterceptor.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://kniveproject-ewyu.vercel.app/api';
 
 let isRefreshing = false;
 let failedQueue = [];

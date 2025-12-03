@@ -25,10 +25,10 @@ const ContactPage = () => {
 
     try {
       // Check if backend is running
-      console.log('Sending request to:', 'http://localhost:3000/api/contact');
+      console.log('Sending request to:', 'https://kniveproject-ewyu.vercel.app/api/contact');
       console.log('Form data:', formData);
 
-      const response = await fetch('http://localhost:3000/api/contact', {
+      const response = await fetch('https://kniveproject-ewyu.vercel.app/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,7 +42,7 @@ const ContactPage = () => {
       if (data.success) {
         setSubmitStatus('success');
         setFormData({ name: "", email: "", message: "" });
-        
+
         // Auto-hide success message after 5 seconds
         setTimeout(() => setSubmitStatus(null), 5000);
       } else {
@@ -52,7 +52,7 @@ const ContactPage = () => {
     } catch (error) {
       console.error('Error:', error);
       setSubmitStatus('error');
-      
+
       // Specific error messages
       if (error.message === 'Failed to fetch') {
         setErrorMessage('Cannot connect to server. Please make sure backend is running on port 3000.');
@@ -170,9 +170,8 @@ const ContactPage = () => {
               whileTap={{ scale: 0.95 }}
               type="submit"
               disabled={isSubmitting}
-              className={`w-full flex items-center justify-center gap-2 ${
-                isSubmitting ? "bg-gray-400" : "bg-yellow-500 hover:bg-yellow-400"
-              } text-black font-bold py-2 rounded-lg transition`}
+              className={`w-full flex items-center justify-center gap-2 ${isSubmitting ? "bg-gray-400" : "bg-yellow-500 hover:bg-yellow-400"
+                } text-black font-bold py-2 rounded-lg transition`}
             >
               {isSubmitting ? (
                 "Sending..."

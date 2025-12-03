@@ -4,12 +4,12 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { Eye, EyeOff } from "lucide-react"; // Install: npm install lucide-react
 
-const API_URL = "http://localhost:3000/api/auth";
+const API_URL = "https://kniveproject-ewyu.vercel.app/api/auth";
 
 const RegisterPage = ({ setUser }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -66,14 +66,14 @@ const RegisterPage = ({ setUser }) => {
           pauseOnHover: true,
           draggable: true,
         });
-        
+
         setFormData({
           name: "",
           email: "",
           password: "",
           confirmPassword: "",
         });
-        
+
         setTimeout(() => {
           navigate("/login", { state: { from } });
         }, 1000);
@@ -82,10 +82,10 @@ const RegisterPage = ({ setUser }) => {
       console.error('❌ Registration error:', err);
       console.error('Error response:', err.response?.data);
       setError(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         "Registration failed. Please try again."
       );
-      
+
       toast.error(err.response?.data?.message || 'Registration failed. Please try again.', {
         position: "top-right",
         autoClose: 3000,

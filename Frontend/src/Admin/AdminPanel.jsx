@@ -11,7 +11,7 @@ import CustomersPage from "./CustomersPage";
 import PromoCodesPage from "./PromoCodesPage";
 import LoadingIndicator from "./LoadingIndicator";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://kniveproject-ewyu.vercel.app/api";
 
 const setupAxios = () => {
   const token = localStorage.getItem("adminToken");

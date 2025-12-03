@@ -5,7 +5,7 @@ import axios from "axios";
 import { loginStart, loginSuccess, loginFailure, clearError } from "../Redux/slice/authSlice.js";
 import { showToast } from "../Redux/slice/cartSlice.js";
 
-const API_URL = "http://localhost:3000/api/auth";
+const API_URL = "https://kniveproject-ewyu.vercel.app/api/auth";
 
 const LoginPage = () => {
   const navigate = useNavigate();

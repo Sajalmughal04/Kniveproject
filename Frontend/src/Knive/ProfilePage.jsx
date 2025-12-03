@@ -5,20 +5,20 @@ import { updateUser } from '../Redux/slice/authSlice'; // ✅ Import update acti
 import axios from 'axios';
 import { User, Mail, Phone, MapPin, Edit2, Save, X, ShoppingBag, Heart, Package } from 'lucide-react';
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://kniveproject-ewyu.vercel.app/api";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+
   // ✅ Get user from Redux instead of props
   const { user, isAuthenticated } = useSelector((state) => state.auth || {});
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
   const [profileData, setProfileData] = useState({
     name: '',
     email: '',
@@ -59,7 +59,7 @@ const ProfilePage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.put(
         `${API_URL}/user/profile`,
         profileData,
@@ -77,16 +77,16 @@ const ProfilePage = () => {
           ...user,
           ...profileData
         };
-        
+
         // Update localStorage
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        
+
         // Update Redux store
         dispatch(updateUser(updatedUser));
-        
+
         setSuccess('Profile updated successfully! ✓');
         setIsEditing(false);
-        
+
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err) {
@@ -305,7 +305,7 @@ const ProfilePage = () => {
         </div>
 
         {/* Back to Home */}
-        
+
       </div>
     </div>
   );

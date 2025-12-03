@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://kniveproject-ewyu.vercel.app/api";
 
 const AllCategoriesPage = () => {
   const navigate = useNavigate();
@@ -129,20 +129,20 @@ const AllCategoriesPage = () => {
                   <span className="text-6xl mb-4 block transform group-hover:scale-110 transition-transform duration-300">
                     {category.icon}
                   </span>
-                  
+
                   <h2 className="text-3xl font-bold text-black dark:text-white mb-2 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors">
                     {category.name}
                   </h2>
-                  
+
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
                     {category.description}
                   </p>
-                  
+
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-gray-500 dark:text-gray-500">
                       {category.productCount || 0} Products
                     </span>
-                    
+
                     {category.featured && (
                       <span className="bg-yellow-500 text-black px-2 py-1 text-xs font-bold">
                         FEATURED

@@ -19,10 +19,10 @@ export default function PaymentSuccess() {
   const fetchPaymentStatus = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/payment/payment-status/${paymentIntentId}`
+        `https://kniveproject-ewyu.vercel.app/api/payment/payment-status/${paymentIntentId}`
       );
       const data = await response.json();
-      
+
       if (data.success) {
         setOrderDetails(data.order);
       }
@@ -67,7 +67,7 @@ export default function PaymentSuccess() {
 
           {/* Success Message */}
           <h1 className="text-4xl font-bold text-white mb-4">
-            Payment Successful! 
+            Payment Successful!
           </h1>
           <p className="text-green-300 text-xl mb-8">
             Thank you for your purchase!
@@ -129,7 +129,7 @@ export default function PaymentSuccess() {
             >
               Continue Shopping
             </button>
-            
+
             {orderDetails && (
               <button
                 onClick={() => window.location.href = `/orders/${orderDetails.orderNumber}`}

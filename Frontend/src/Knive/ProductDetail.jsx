@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../Redux/slice/cartSlice";
 import { useWishlist } from "./WishlistContext";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://kniveproject-ewyu.vercel.app/api";
 
 const ProductDetail = () => {
   const dispatch = useDispatch();
@@ -16,7 +16,7 @@ const ProductDetail = () => {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -30,12 +30,12 @@ const ProductDetail = () => {
       try {
         const response = await axios.get(`${API_URL}/products/${id}`);
         const productData = response.data.product || response.data;
-        
+
         console.log("📦 Full Response:", response.data);
         console.log("📦 Product Data:", productData);
         console.log("💰 Price:", productData.price);
         console.log("✅ Product extracted successfully!");
-        
+
         setProduct(productData);
       } catch (err) {
         console.error("❌ Error fetching product:", err);
@@ -77,7 +77,7 @@ const ProductDetail = () => {
   }
 
   const productPrice = product?.price || 0;
-  
+
   console.log("🔍 Final Product Check:");
   console.log("  - Product:", product);
   console.log("  - Price:", product?.price);
@@ -89,13 +89,13 @@ const ProductDetail = () => {
   const hasDiscount = product?.hasDiscount || (discountValue > 0 && discountType !== 'none');
   const finalPrice = product?.finalPrice || product?.discountedPrice || productPrice;
   const savings = product?.savings || (hasDiscount ? productPrice - finalPrice : 0);
-  
+
   if (!product || !product.price || !product.title) {
     console.error("❌ Missing required fields!");
     console.error("Product:", product);
     console.error("Price exists?:", !!product?.price);
     console.error("Title exists?:", !!product?.title);
-    
+
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <div className="text-center">
@@ -115,14 +115,14 @@ const ProductDetail = () => {
     );
   }
 
-  const images = product.images && product.images.length > 0 
-    ? product.images.map(img => img.url) 
+  const images = product.images && product.images.length > 0
+    ? product.images.map(img => img.url)
     : ["data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23f3f4f6' width='400' height='400'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='24' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E"];
 
   // ✅ FIXED - Use finalPrice (discounted price) instead of productPrice
   const handleAddToCart = () => {
     if (product.stock > 0) {
-      dispatch(addToCart({ 
+      dispatch(addToCart({
         id: product._id,
         name: product.title,
         price: finalPrice, // ✅ CHANGED: Use finalPrice instead of productPrice
@@ -135,7 +135,7 @@ const ProductDetail = () => {
         savings,
         originalPrice: productPrice // ✅ Keep original price for reference
       }));
-      
+
       toast.success(`${product.title} added to cart!`, {
         position: "top-right",
         autoClose: 2000,
@@ -187,7 +187,7 @@ const ProductDetail = () => {
       stock: product.stock,
       description: product.description
     };
-    
+
     console.log("🔄 Toggling wishlist for:", wishlistItem);
     toggleWishlist(wishlistItem);
   };
@@ -233,7 +233,7 @@ const ProductDetail = () => {
               </button>
             </>
           )}
-          
+
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
               <span className="text-white font-bold text-2xl">OUT OF STOCK</span>
@@ -249,11 +249,10 @@ const ProductDetail = () => {
                 src={img}
                 onClick={() => setCurrentImage(index)}
                 alt=""
-                className={`w-16 h-16 object-cover rounded-md cursor-pointer border-2 transition-transform duration-200 hover:scale-110 ${
-                  index === currentImage
+                className={`w-16 h-16 object-cover rounded-md cursor-pointer border-2 transition-transform duration-200 hover:scale-110 ${index === currentImage
                     ? "border-black dark:border-white"
                     : "border-gray-300 opacity-70"
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -263,7 +262,7 @@ const ProductDetail = () => {
       {/* RIGHT SIDE - DETAILS SECTION */}
       <div className="md:w-1/2 w-full">
         <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
-        
+
         {/* Price Display with Discount */}
         <div className="mb-4">
           {hasDiscount ? (
@@ -289,7 +288,7 @@ const ProductDetail = () => {
             </p>
           )}
         </div>
-        
+
         {product.category && (
           <div className="mb-4">
             <span className="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-semibold uppercase">

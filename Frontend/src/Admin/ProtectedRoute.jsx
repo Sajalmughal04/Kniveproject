@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children }) => {
         console.log('🔐 ========================================');
         console.log('🔐 PROTECTED ROUTE: VERIFICATION STARTED');
         console.log('🔐 ========================================');
-        
+
         // 🆔 STEP 1: Generate or get tab-specific ID
         if (!tabIdRef.current) {
           tabIdRef.current = sessionStorage.getItem('currentTabId');
@@ -37,9 +37,9 @@ const ProtectedRoute = ({ children }) => {
             sessionStorage.setItem('currentTabId', tabIdRef.current);
           }
         }
-        
+
         console.log('🆔 Current Tab ID:', tabIdRef.current);
-        
+
         const adminToken = localStorage.getItem('adminToken');
         const userToken = localStorage.getItem('token');
         const adminData = localStorage.getItem('adminData');
@@ -59,7 +59,7 @@ const ProtectedRoute = ({ children }) => {
           console.log('❌ This is a VISITOR/GUEST');
           console.log('❌ Showing 404 page');
           console.log('❌ ========================================');
-          
+
           setAuthState({
             isAuthenticated: false,
             isAdmin: false,
@@ -77,7 +77,7 @@ const ProtectedRoute = ({ children }) => {
           console.log('❌ ACCESS DENIED: REGULAR USER');
           console.log('❌ Showing 404 page');
           console.log('❌ ========================================');
-          
+
           setAuthState({
             isAuthenticated: false,
             isAdmin: false,
@@ -95,7 +95,7 @@ const ProtectedRoute = ({ children }) => {
           console.log('❌ ACCESS DENIED: ONLY USER TOKEN');
           console.log('❌ Showing 404 page');
           console.log('❌ ========================================');
-          
+
           setAuthState({
             isAuthenticated: true,
             isAdmin: false,
@@ -113,7 +113,7 @@ const ProtectedRoute = ({ children }) => {
           console.log('❌ ACCESS DENIED: CUSTOMER ROLE');
           console.log('❌ Showing 404 page');
           console.log('❌ ========================================');
-          
+
           setAuthState({
             isAuthenticated: true,
             isAdmin: false,
@@ -135,7 +135,7 @@ const ProtectedRoute = ({ children }) => {
           console.log('❌ This tab is NOT authorized');
           console.log('❌ Showing 404 page');
           console.log('❌ ========================================');
-          
+
           setAuthState({
             isAuthenticated: false,
             isAdmin: false,
@@ -152,8 +152,8 @@ const ProtectedRoute = ({ children }) => {
         console.log('🔄 Step 3: Admin token found!');
         console.log('🔄 Verifying with backend API...');
         console.log('🔄 ========================================');
-        
-        const response = await axios.get('http://localhost:3000/api/admin/profile', {
+
+        const response = await axios.get('https://kniveproject-ewyu.vercel.app/api/admin/profile', {
           headers: {
             'Authorization': `Bearer ${adminToken}`
           },
@@ -164,15 +164,15 @@ const ProtectedRoute = ({ children }) => {
 
         let userRole = null;
         let userEmail = null;
-        
+
         if (response.data.success) {
-          userRole = 
+          userRole =
             response.data.data?.role ||
             response.data.admin?.role ||
             response.data.user?.role ||
             response.data.role;
-            
-          userEmail = 
+
+          userEmail =
             response.data.data?.email ||
             response.data.admin?.email ||
             response.data.user?.email ||
@@ -198,7 +198,7 @@ const ProtectedRoute = ({ children }) => {
           console.log('✅ This tab is AUTHORIZED');
           console.log('✅ GRANTING ACCESS');
           console.log('✅ ========================================');
-          
+
           setAuthState({
             isAuthenticated: true,
             isAdmin: true,
@@ -213,11 +213,11 @@ const ProtectedRoute = ({ children }) => {
           console.log('❌ Clearing tokens...');
           console.log('❌ Showing 404 page');
           console.log('❌ ========================================');
-          
+
           localStorage.removeItem('adminToken');
           localStorage.removeItem('adminData');
           localStorage.removeItem('authorizedAdminTab');
-          
+
           setAuthState({
             isAuthenticated: false,
             isAdmin: false,
@@ -239,7 +239,7 @@ const ProtectedRoute = ({ children }) => {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminData');
         localStorage.removeItem('authorizedAdminTab');
-        
+
         setAuthState({
           isAuthenticated: false,
           isAdmin: false,
@@ -283,7 +283,7 @@ const ProtectedRoute = ({ children }) => {
     console.log('   - userRole:', authState.userRole);
     console.log('🚫 REDIRECTING TO 404 PAGE');
     console.log('🚫 ========================================');
-    
+
     return <Navigate to="/page-not-found-404" replace />;
   }
 

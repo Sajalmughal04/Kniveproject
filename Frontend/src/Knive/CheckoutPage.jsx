@@ -38,7 +38,7 @@ export default function CheckoutPage() {
     paymentMethod: 'cash_on_delivery'
   });
 
-  const API_URL = 'http://localhost:3000/api';
+  const API_URL = 'https://kniveproject-ewyu.vercel.app/api';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -410,8 +410,8 @@ export default function CheckoutPage() {
                         <label
                           key={method}
                           className={`flex items-center gap-4 p-4 border cursor-pointer transition-all duration-200 ${formData.paymentMethod === method
-                              ? "border-black bg-gray-50"
-                              : "border-gray-200 hover:border-gray-400"
+                            ? "border-black bg-gray-50"
+                            : "border-gray-200 hover:border-gray-400"
                             }`}
                         >
                           <input
