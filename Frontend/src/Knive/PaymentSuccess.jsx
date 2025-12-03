@@ -19,7 +19,7 @@ export default function PaymentSuccess() {
   const fetchPaymentStatus = async () => {
     try {
       const response = await fetch(
-        `https://kniveproject-ewyu.vercel.app/api/payment/payment-status/${paymentIntentId}`
+        `https://kniveproject-3fa4.vercel.app/api/payment/payment-status/${paymentIntentId}`
       );
       const data = await response.json();
 

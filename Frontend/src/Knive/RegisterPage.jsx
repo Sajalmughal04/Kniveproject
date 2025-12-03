@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { Eye, EyeOff } from "lucide-react"; // Install: npm install lucide-react
 
-const API_URL = "https://kniveproject-ewyu.vercel.app/api/auth";
+const API_URL = "https://kniveproject-3fa4.vercel.app/api/auth";
 
 const RegisterPage = ({ setUser }) => {
   const navigate = useNavigate();

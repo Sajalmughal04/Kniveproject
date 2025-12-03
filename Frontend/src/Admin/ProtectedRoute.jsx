@@ -153,7 +153,7 @@ const ProtectedRoute = ({ children }) => {
         console.log('🔄 Verifying with backend API...');
         console.log('🔄 ========================================');
 
-        const response = await axios.get('https://kniveproject-ewyu.vercel.app/api/admin/profile', {
+        const response = await axios.get('https://kniveproject-3fa4.vercel.app/api/admin/profile', {
           headers: {
             'Authorization': `Bearer ${adminToken}`
           },

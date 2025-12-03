@@ -5,7 +5,7 @@ import { updateUser } from '../Redux/slice/authSlice'; // ✅ Import update acti
 import axios from 'axios';
 import { User, Mail, Phone, MapPin, Edit2, Save, X, ShoppingBag, Heart, Package } from 'lucide-react';
 
-const API_URL = "https://kniveproject-ewyu.vercel.app/api";
+const API_URL = "https://kniveproject-3fa4.vercel.app/api";
 
 const ProfilePage = () => {
   const navigate = useNavigate();

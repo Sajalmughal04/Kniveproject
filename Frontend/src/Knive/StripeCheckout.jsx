@@ -16,7 +16,7 @@ let stripePromise = null;
 const getStripePromise = async () => {
   if (!stripePromise) {
     try {
-      const response = await fetch("https://kniveproject-ewyu.vercel.app/api/payment/config");
+      const response = await fetch("https://kniveproject-3fa4.vercel.app/api/payment/config");
       const { publishableKey } = await response.json();
       stripePromise = loadStripe(publishableKey);
     } catch (error) {
@@ -122,7 +122,7 @@ export default function StripeCheckout({ customerInfo, onSuccess }) {
       setLoading(true);
 
       const response = await fetch(
-        "https://kniveproject-ewyu.vercel.app/api/payment/create-payment-intent",
+        "https://kniveproject-3fa4.vercel.app/api/payment/create-payment-intent",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = 'https://kniveproject-ewyu.vercel.app/api';
+  const API_URL = 'https://kniveproject-3fa4.vercel.app/api';
 
   // Check if user is logged in on mount
   useEffect(() => {

@@ -9,7 +9,7 @@ import { Heart, Tag } from "lucide-react";
 import SkeletonCard from "./SkeletonCard";
 import SkeletonImage from "./SkeletonImage";
 
-const API_URL = "https://kniveproject-ewyu.vercel.app/api";
+const API_URL = "https://kniveproject-3fa4.vercel.app/api";
 
 const AllProducts = ({ searchTerm = "" }) => {
   const navigate = useNavigate();

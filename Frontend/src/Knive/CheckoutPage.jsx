@@ -38,7 +38,7 @@ export default function CheckoutPage() {
     paymentMethod: 'cash_on_delivery'
   });
 
-  const API_URL = 'https://kniveproject-ewyu.vercel.app/api';
+  const API_URL = 'https://kniveproject-3fa4.vercel.app/api';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../Redux/slice/cartSlice";
 import { useWishlist } from "./WishlistContext";
 
-const API_URL = "https://kniveproject-ewyu.vercel.app/api";
+const API_URL = "https://kniveproject-3fa4.vercel.app/api";
 
 const ProductDetail = () => {
   const dispatch = useDispatch();
@@ -250,8 +250,8 @@ const ProductDetail = () => {
                 onClick={() => setCurrentImage(index)}
                 alt=""
                 className={`w-16 h-16 object-cover rounded-md cursor-pointer border-2 transition-transform duration-200 hover:scale-110 ${index === currentImage
-                    ? "border-black dark:border-white"
-                    : "border-gray-300 opacity-70"
+                  ? "border-black dark:border-white"
+                  : "border-gray-300 opacity-70"
                   }`}
               />
             ))}
