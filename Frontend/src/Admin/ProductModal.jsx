@@ -229,6 +229,9 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
               <option value="Kitchen Knives">Kitchen Knives</option>
               <option value="Swords">Swords</option>
               <option value="Axes">Axes</option>
+              <option value="Hunting Knives">Hunting Knives</option>
+              <option value="Folding Knives">Folding Knives</option>
+              <option value="Raw Materials">Raw Materials</option>
             </select>
           </div>
 
@@ -511,6 +514,6 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 }

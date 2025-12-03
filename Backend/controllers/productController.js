@@ -472,13 +472,57 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
+// ✅ Get all products with filtering
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const { featured, category, limit } = req.query;
+
+    const query = {};
+
+    if (featured === 'true') {
+      query.featured = true;
+    }
+
+    if (category && category !== 'all') {
+      query.category = category.toLowerCase();
+    }
+
+    let mongooseQuery = Product.find(query).sort({ createdAt: -1 });
+
+    if (limit) {
+      const limitVal = parseInt(limit);
+      if (!isNaN(limitVal) && limitVal > 0) {
+        mongooseQuery = mongooseQuery.limit(limitVal);
+      }
+    }
+
+    const products = await mongooseQuery;
+
+    // Calculate final prices
+    const productsWithFinalPrice = products.map(product => {
+      let finalPrice = product.price;
+      let hasDiscount = false;
+
+      if (product.discountType && product.discountType !== 'none' && product.discountValue > 0) {
+        hasDiscount = true;
+        if (product.discountType === 'percentage') {
+          finalPrice = product.price - (product.price * product.discountValue / 100);
+        } else {
+          finalPrice = product.price - product.discountValue;
+        }
+      }
+
+      return {
+        ...product.toObject(),
+        finalPrice,
+        hasDiscount,
+        savings: product.price - finalPrice
+      };
+    });
+
     res.status(200).json({
       success: true,
-      count: products.length,
-      products,
+      products: productsWithFinalPrice,
     });
   } catch (error) {
     console.error("❌ Get all products error:", error);
@@ -490,6 +534,7 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
+// ✅ Get single product by ID
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -501,9 +546,29 @@ export const getProductById = async (req, res) => {
       });
     }
 
+    // Calculate final price
+    let finalPrice = product.price;
+    let hasDiscount = false;
+
+    if (product.discountType && product.discountType !== 'none' && product.discountValue > 0) {
+      hasDiscount = true;
+      if (product.discountType === 'percentage') {
+        finalPrice = product.price - (product.price * product.discountValue / 100);
+      } else {
+        finalPrice = product.price - product.discountValue;
+      }
+    }
+
+    const productWithPrice = {
+      ...product.toObject(),
+      finalPrice,
+      hasDiscount,
+      savings: product.price - finalPrice
+    };
+
     res.status(200).json({
       success: true,
-      product,
+      product: productWithPrice,
     });
   } catch (error) {
     console.error("❌ Get product by ID error:", error);
