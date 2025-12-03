@@ -17,7 +17,7 @@ dotenv.config();
 
 const app = express();
 
-// ⭐ CORS Configuration - PATCH METHOD ADDED
+// ⭐ CORS Configuration
 app.use(cors({
   origin: [
     "https://kniveproject.vercel.app",
@@ -26,20 +26,17 @@ app.use(cors({
     "http://localhost:5174"
   ],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // ⭐ PATCH ADDED
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// Webhook route (before JSON parser)
-app.post("/api/payment/webhook",
+// ⭐ IMPORTANT: Webhook MUST be before body parser
+app.use("/api/payment/webhook",
   express.raw({ type: "application/json" }),
-  (req, res, next) => {
-    req.url = '/webhook';
-    paymentRoutes(req, res, next);
-  }
+  paymentRoutes
 );
 
-// Body Parser
+// Body Parser (after webhook)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -47,7 +44,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const createDefaultAdmin = async () => {
   try {
     const adminExists = await User.findOne({ role: 'admin' });
-    if (adminExists) return;
+    if (adminExists) {
+      console.log('✅ Admin already exists');
+      return;
+    }
 
     const hashedPassword = await bcrypt.hash('admin123', 10);
 
@@ -72,6 +72,7 @@ app.get("/", (req, res) => {
   res.json({
     message: "🚀 Knives Backend API",
     version: "1.0.0",
+    status: "active",
     endpoints: {
       products: "/api/products",
       categories: "/api/categories",
@@ -82,6 +83,15 @@ app.get("/", (req, res) => {
       payment: "/api/payment",
       promocodes: "/api/promocodes"
     }
+  });
+});
+
+// ⭐ Test endpoint to verify routes work
+app.get("/api/test", (req, res) => {
+  res.json({ 
+    success: true, 
+    message: "API routes are working!",
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -97,36 +107,90 @@ app.use("/api/promocodes", promoCodeRoutes);
 
 // 404 Handler
 app.use((req, res) => {
+  console.log(`❌ 404: ${req.method} ${req.path}`);
   res.status(404).json({
     success: false,
-    message: `Route ${req.method} ${req.path} not found`
+    message: `Route ${req.method} ${req.path} not found`,
+    availableEndpoints: [
+      "/api/products",
+      "/api/categories",
+      "/api/orders",
+      "/api/auth",
+      "/api/contact",
+      "/api/payment",
+      "/api/admin",
+      "/api/promocodes"
+    ]
   });
 });
 
 // Error Handler
 app.use((err, req, res, next) => {
-  console.error("❌ Error:", err.message);
+  console.error("❌ Server Error:", err.message);
+  console.error("Stack:", err.stack);
+  
   res.status(err.status || 500).json({
     success: false,
-    message: err.message || "Internal Server Error"
+    message: err.message || "Internal Server Error",
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 
-// Connect DB and create admin
-connectDB().then(() => {
-  createDefaultAdmin();
-});
+// ⭐⭐⭐ CRITICAL FIX: Single DB connection instance
+let isConnected = false;
 
-// Vercel Export
+const connectOnce = async () => {
+  if (isConnected) {
+    console.log('♻️ Using existing DB connection');
+    return;
+  }
+  
+  try {
+    await connectDB();
+    isConnected = true;
+    console.log('✅ Database connected');
+    
+    // Create admin only once after connection
+    await createDefaultAdmin();
+  } catch (error) {
+    console.error('❌ Database connection failed:', error.message);
+    throw error;
+  }
+};
+
+// ⭐⭐⭐ VERCEL SERVERLESS EXPORT
 export default async (req, res) => {
-  await connectDB();
-  return app(req, res);
+  try {
+    // Connect to DB once
+    await connectOnce();
+    
+    // Let Express handle the request
+    return app(req, res);
+    
+  } catch (error) {
+    console.error('❌ Handler Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server initialization failed',
+      error: error.message
+    });
+  }
 };
 
 // Local Development
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-  });
+  
+  connectDB()
+    .then(() => {
+      createDefaultAdmin();
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      });
+    })
+    .catch((error) => {
+      console.error('❌ Failed to start server:', error);
+      process.exit(1);
+    });
 }
