@@ -15,18 +15,13 @@ import {
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../Redux/slice/authSlice"; // ✅ Auth Redux
-import { selectCartCount } from "../Redux/slice/cartSlice"; // ✅ Cart Redux
+import { logout } from "../Redux/slice/authSlice";
+import { selectCartCount } from "../Redux/slice/cartSlice";
 import { useWishlist } from "./WishlistContext";
 
 const Navbar = ({ setSearchTerm, theme, toggleTheme }) => {
-  // ✅ GET CART COUNT FROM REDUX
   const cartCount = useSelector(selectCartCount);
-  
-  // ✅ GET WISHLIST (Still using context for now)
   const { wishlistCount } = useWishlist();
-
-  // ✅ GET USER FROM REDUX
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth || {});
 
@@ -36,7 +31,6 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get user initials for avatar
   const getInitials = (name) => {
     if (!name) return "U";
     const parts = name.trim().split(" ");
@@ -46,7 +40,6 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => {
     return name.substring(0, 2).toUpperCase();
   };
 
-  // Generate avatar background color based on name
   const getAvatarColor = (name) => {
     if (!name) return "bg-gray-500";
     const colors = [
@@ -63,14 +56,12 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => {
     return colors[index];
   };
 
-  // ✅ Scroll detection for navbar style
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ✅ Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showUserMenu && !event.target.closest('.user-menu-container')) {
@@ -88,7 +79,6 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => {
     if (location.pathname !== "/shop") navigate("/shop");
   };
 
-  // ✅ LOGOUT - USES REDUX
   const handleLogout = () => {
     dispatch(logout());
     setShowUserMenu(false);
@@ -168,7 +158,7 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => {
               )}
             </button>
 
-            {/* 🛒 Cart - ✅ NOW USING REDUX */}
+            {/* 🛒 Cart */}
             <button
               onClick={() => navigate("/cart")}
               className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group"
@@ -304,18 +294,62 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => {
           </li>
         </ul>
 
-        {/* Mobile Toggle */}
-        <button
-          onClick={() => setOpen(!open)}
-          className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-          aria-label="Toggle mobile menu"
-        >
-          {open ? (
-            <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-          ) : (
-            <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-          )}
-        </button>
+        {/* ⭐⭐⭐ MOBILE ICONS - WISHLIST, CART, THEME ⭐⭐⭐ */}
+        <div className="flex md:hidden items-center space-x-2">
+          {/* ❤️ Mobile Wishlist */}
+          <button
+            onClick={() => navigate("/wishlist")}
+            className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+            aria-label="Wishlist"
+          >
+            <Heart className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            {wishlistCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                {wishlistCount}
+              </span>
+            )}
+          </button>
+
+          {/* 🛒 Mobile Cart */}
+          <button
+            onClick={() => navigate("/cart")}
+            className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+            aria-label="Shopping cart"
+          >
+            <ShoppingCart className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+          {/* 🌙 / ☀️ Mobile Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-5 h-5 text-gray-300" />
+            ) : (
+              <Moon className="w-5 h-5 text-gray-700" />
+            )}
+          </button>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={() => setOpen(!open)}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+            aria-label="Toggle mobile menu"
+          >
+            {open ? (
+              <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+            ) : (
+              <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* MOBILE MENU */}
