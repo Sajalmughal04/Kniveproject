@@ -1,0 +1,219 @@
+/* ===================================
+   RESPONSIVE DESIGN ENHANCEMENTS
+   Add this to your index.css or App.css
+   =================================== */
+
+/* Hide scrollbar for horizontal scrolling elements */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Improved touch targets for mobile */
+@media (max-width: 640px) {
+
+    button,
+    a {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* Product Detail - Better image thumbnails on mobile */
+@media (max-width: 768px) {
+    .product-thumbnail {
+        width: 20vw !important;
+        height: 20vw !important;
+        max-width: 80px;
+        max-height: 80px;
+    }
+}
+
+/* Checkout Page - Better form spacing on mobile */
+@media (max-width: 640px) {
+
+    .checkout-form input,
+    .checkout-form select,
+    .checkout-form textarea {
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+    }
+}
+
+/* Admin Dashboard - Scrollable tables on mobile */
+@media (max-width: 768px) {
+    .admin-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table {
+        min-width: 600px;
+    }
+}
+
+/* Profile Page - Smaller avatar on mobile */
+@media (max-width: 640px) {
+    .profile-avatar {
+        width: 4rem !important;
+        height: 4rem !important;
+    }
+}
+
+/* Better spacing for mobile forms */
+@media (max-width: 640px) {
+    .form-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Ensure images don't overflow on any device */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Better text readability on mobile */
+@media (max-width: 640px) {
+    body {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    h1 {
+        font-size: 1.875rem;
+        /* 30px */
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        /* 24px */
+    }
+
+    h3 {
+        font-size: 1.25rem;
+        /* 20px */
+    }
+}
+
+/* Prevent horizontal scroll */
+html,
+body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+/* Better modal sizing on mobile */
+@media (max-width: 640px) {
+    .modal-content {
+        width: 95vw !important;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* ===================================
+   ADMIN PANEL RESPONSIVE FIXES
+   =================================== */
+
+/* Mobile sidebar - ensure content not blocked */
+@media (max-width: 768px) {
+    .admin-content {
+        padding-left: 0 !important;
+        margin-top: 60px;
+        /* Space for mobile menu button */
+    }
+
+    .admin-sidebar {
+        position: fixed;
+        z-index: 40;
+    }
+}
+
+/* Scrollable tables on mobile */
+.admin-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-table {
+    min-width: 800px;
+}
+
+/* Better touch targets for admin buttons */
+@media (max-width: 640px) {
+    .admin-action-button {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.75rem;
+    }
+}
+
+/* Stats cards responsive */
+@media (max-width: 640px) {
+    .stats-card {
+        padding: 1rem !important;
+    }
+
+    .stats-card h3 {
+        font-size: 1.5rem !important;
+    }
+
+    .stats-card p {
+        font-size: 0.875rem !important;
+    }
+}
+
+/* Admin forms on mobile */
+@media (max-width: 640px) {
+    .admin-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .admin-form input,
+    .admin-form select,
+    .admin-form textarea {
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+    }
+}
+
+/* Product/Order cards for mobile */
+@media (max-width: 768px) {
+
+    .product-card,
+    .order-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Admin header responsive */
+@media (max-width: 640px) {
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+
+    .admin-header h1 {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* Sidebar transition */
+.admin-sidebar {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Mobile menu overlay */
+.mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 30;
+}

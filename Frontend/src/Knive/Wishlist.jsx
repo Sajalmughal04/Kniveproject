@@ -26,7 +26,7 @@ const Wishlist = () => {
       image: item.image,
       quantity: 1
     }));
-    
+
     toast.success(`${item.name || item.title} added to cart!`);
   };
 
@@ -43,7 +43,7 @@ const Wishlist = () => {
               {wishlist.length} {wishlist.length === 1 ? "item" : "items"} in your wishlist
             </p>
           </div>
-          
+
           {/* Clear All Button */}
           {wishlist.length > 0 && (
             <button
@@ -91,7 +91,7 @@ const Wishlist = () => {
               const handleRemove = (e) => {
                 e.stopPropagation();
                 console.log("🗑️ Removing item with ID:", productId);
-                
+
                 // Pass the complete item object with proper structure
                 toggleWishlist({
                   ...item,
@@ -148,11 +148,11 @@ const Wishlist = () => {
                     {/* Price */}
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">
-                        Rs. {productPrice.toFixed(2)}
+                        ${productPrice.toFixed(2)}
                       </span>
                       {item.oldPrice && (
                         <span className="text-sm text-gray-400 line-through">
-                          Rs. {item.oldPrice.toFixed(2)}
+                          ${item.oldPrice.toFixed(2)}
                         </span>
                       )}
                     </div>

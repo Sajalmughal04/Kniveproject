@@ -14,7 +14,7 @@ import {
 export default function CartPage({ user }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+
   const cart = useSelector(selectCartItems);
   const cartTotal = useSelector(selectCartTotal);
   const cartCount = useSelector(selectCartCount);
@@ -54,7 +54,7 @@ export default function CartPage({ user }) {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black py-24 px-6">
+    <div className="min-h-screen bg-white dark:bg-black py-16 sm:py-24 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-12 pb-6 border-b border-gray-200 dark:border-gray-800">
           <h1 className="text-3xl font-bold text-black dark:text-white tracking-tight">
@@ -68,13 +68,13 @@ export default function CartPage({ user }) {
           </button>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {cart.map((item) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 p-6 flex gap-6 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+              className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
             >
               <img
                 src={item.image}
@@ -179,11 +179,10 @@ export default function CartPage({ user }) {
               </button>
               <button
                 onClick={handleCheckout}
-                className={`flex-1 font-medium py-3 transition-colors ${
-                  user
+                className={`flex-1 font-medium py-3 transition-colors ${user
                     ? "bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black"
                     : "bg-gray-300 dark:bg-gray-800 text-gray-500 dark:text-gray-500 cursor-not-allowed"
-                }`}
+                  }`}
                 disabled={!user}
               >
                 Checkout

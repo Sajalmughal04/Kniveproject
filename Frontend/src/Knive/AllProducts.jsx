@@ -126,8 +126,6 @@ const AllProducts = ({ searchTerm = "" }) => {
     toggleWishlist(wishlistItem);
   };
 
-
-  // ✅ UPDATED - Categories exactly matching Product Model
   const categories = [
     { id: "all", label: "All Products" },
     { id: "kitchen knives", label: "Kitchen Knives" },
@@ -162,7 +160,7 @@ const AllProducts = ({ searchTerm = "" }) => {
       <div className="max-w-7xl mx-auto px-6 pb-20">
         {/* Controls */}
         <div className="flex flex-col lg:flex-row gap-6 items-center justify-between mb-12">
-          {/* ✅ UPDATED Category Filter - Modern Pill Design */}
+          {/* Category Filter */}
           <div className="w-full lg:w-auto overflow-x-auto pb-4 lg:pb-0">
             <div className="flex gap-3 justify-center lg:justify-start min-w-max px-2">
               {categories.map((cat) => (
@@ -241,10 +239,10 @@ const AllProducts = ({ searchTerm = "" }) => {
           )}
         </AnimatePresence>
 
-        {/* Product Grid/List */}
+        {/* Product Grid - EQUAL HEIGHT CARDS */}
         <div className={viewMode === "grid"
-          ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-          : "flex flex-col gap-6"
+          ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+          : "flex flex-col gap-4"
         }>
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
@@ -262,37 +260,37 @@ const AllProducts = ({ searchTerm = "" }) => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.03 }}
-                  className={`bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600 transition-all duration-300 cursor-pointer group ${viewMode === "list" ? "flex flex-row" : ""
+                  className={`bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600 transition-all duration-300 cursor-pointer group overflow-hidden ${viewMode === "list" ? "flex flex-row" : "flex flex-col"
                     }`}
                   onClick={() => navigate(`/product/${product._id}`)}
                 >
-                  <div className={`relative overflow-hidden bg-gray-100 dark:bg-gray-900 ${viewMode === "list" ? "w-64 flex-shrink-0" : ""}`}>
+                  {/* Image Container */}
+                  <div className={`relative overflow-hidden bg-gray-100 dark:bg-gray-900 flex-shrink-0 ${viewMode === "list" ? "w-40 h-40" : "w-full h-40"}`}>
                     <SkeletonImage
                       src={product.images?.[0]?.url || "https://via.placeholder.com/400"}
                       alt={product.title}
-                      className={`object-cover transform transition-transform duration-700 group-hover:scale-105 ${viewMode === "list" ? "w-full h-full" : "w-full h-80"
-                        }`}
+                      className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
                     />
 
                     {/* Wishlist Button */}
                     <button
                       onClick={(e) => handleToggleWishlist(product, e)}
-                      className="absolute top-4 right-4 bg-white dark:bg-black p-2 rounded-full hover:scale-110 transition shadow-lg z-10"
+                      className="absolute top-2 right-2 bg-white dark:bg-black p-1 rounded-full hover:scale-110 transition shadow-lg z-10"
                     >
                       <Heart
-                        size={20}
+                        size={12}
                         fill={inWishlist ? "red" : "none"}
                         className={inWishlist ? "text-red-500" : "text-gray-400"}
                         strokeWidth={2}
                       />
                     </button>
 
-                    {/* 🎯 DISCOUNT BADGE */}
+                    {/* Discount Badge */}
                     {hasDiscount && (
-                      <div className="absolute top-4 left-4 z-10">
-                        <div className="bg-gradient-to-r from-red-600 to-orange-500 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2">
-                          <Tag size={16} />
-                          <span className="font-bold text-sm">
+                      <div className="absolute top-2 left-2 z-10">
+                        <div className="bg-gradient-to-r from-red-600 to-orange-500 text-white px-1.5 py-0.5 rounded shadow-lg flex items-center gap-0.5">
+                          <Tag size={9} />
+                          <span className="font-bold text-xs">
                             {product.discountType === 'percentage'
                               ? `-${product.discountValue}%`
                               : `-$${product.discountValue}`
@@ -302,10 +300,10 @@ const AllProducts = ({ searchTerm = "" }) => {
                       </div>
                     )}
 
-                    {/* ⭐ FEATURED BADGE */}
+                    {/* Featured Badge */}
                     {product.featured && (
-                      <div className={`absolute z-10 ${hasDiscount ? 'top-16' : 'top-4'} left-4`}>
-                        <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-3 py-1 rounded-lg shadow-lg flex items-center gap-1">
+                      <div className={`absolute z-10 ${hasDiscount ? 'top-8' : 'top-2'} left-2`}>
+                        <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-1.5 py-0.5 rounded shadow-lg">
                           <span className="text-xs font-bold uppercase tracking-wider">Featured</span>
                         </div>
                       </div>
@@ -313,73 +311,79 @@ const AllProducts = ({ searchTerm = "" }) => {
 
                     {/* Stock Badge */}
                     {product.stock < 5 && product.stock > 0 && !hasDiscount && !product.featured && (
-                      <div className="absolute top-4 left-4 bg-black dark:bg-white text-white dark:text-black px-3 py-1 text-xs font-semibold">
+                      <div className="absolute top-2 left-2 bg-black dark:bg-white text-white dark:text-black px-1.5 py-0.5 text-xs font-semibold">
                         ONLY {product.stock} LEFT
                       </div>
                     )}
 
                     {product.stock === 0 && (
                       <div className="absolute inset-0 bg-white/90 dark:bg-black/90 flex items-center justify-center">
-                        <span className="text-black dark:text-white font-bold text-lg tracking-wider">OUT OF STOCK</span>
+                        <span className="text-black dark:text-white font-bold text-xs tracking-wider">OUT OF STOCK</span>
                       </div>
                     )}
                   </div>
 
-                  <div className={`p-6 flex flex-col ${viewMode === "list" ? "flex-1 justify-between" : ""}`}>
-                    <div>
-                      <h2 className="text-xl font-semibold text-black dark:text-white mb-2 line-clamp-2">
-                        {product.title}
-                      </h2>
-                    </div>
+                  {/* Content Container - FIXED HEIGHT */}
+                  <div className={`p-2.5 flex flex-col ${viewMode === "list" ? "flex-1" : ""}`}>
+                    {/* Title - Fixed Height */}
+                    <h2 className="text-xs font-semibold text-black dark:text-white mb-1 line-clamp-2 h-8">
+                      {product.title}
+                    </h2>
 
-                    <div className="mt-auto">
-                      {/* 💰 PRICING WITH DISCOUNT */}
-                      <div className="mb-4">
-                        {hasDiscount ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-3">
-                              <p className="text-2xl font-bold text-green-600">
-                                ${finalPrice.toLocaleString()}
-                              </p>
-                              <p className="text-lg text-gray-400 line-through">
-                                ${product.price.toLocaleString()}
-                              </p>
-                            </div>
-                            <p className="text-xs text-green-600 font-semibold">
-                              💰 Save ${savings.toLocaleString()}
+                    {/* Pricing Section - Fixed Height */}
+                    <div className="mb-2 h-12 flex flex-col justify-start">
+                      {hasDiscount ? (
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1">
+                            <p className="text-sm font-bold text-green-600">
+                              ${finalPrice.toLocaleString()}
+                            </p>
+                            <p className="text-xs text-gray-400 line-through">
+                              ${product.price.toLocaleString()}
                             </p>
                           </div>
-                        ) : (
-                          <p className="text-2xl font-bold text-black dark:text-white">
+                          <p className="text-xs text-green-600 font-semibold">
+                            Save ${savings.toLocaleString()}
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-sm font-bold text-black dark:text-white">
                             ${product.price.toLocaleString()}
                           </p>
-                        )}
-
-                        {product.stock > 0 && (
-                          <p className="text-xs text-gray-500 dark:text-gray-500 font-medium mt-1">
-                            In Stock: {product.stock}
-                          </p>
-                        )}
-                      </div>
-
-                      {product.stock > 0 ? (
-                        <motion.button
-                          onClick={(e) => handleAddToCart(product, e)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3 px-6 hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors duration-300"
-                        >
-                          ADD TO CART
-                        </motion.button>
-                      ) : (
-                        <button
-                          disabled
-                          className="w-full bg-gray-200 dark:bg-gray-900 text-gray-400 dark:text-gray-600 font-semibold py-3 px-6 cursor-not-allowed"
-                        >
-                          OUT OF STOCK
-                        </button>
+                          {/* Empty space to match discount card height */}
+                          <div className="h-4"></div>
+                        </div>
                       )}
                     </div>
+
+                    {/* Stock Info - Fixed Height */}
+                    <div className="h-4 mb-2">
+                      {product.stock > 0 && (
+                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                          Stock: {product.stock}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Button */}
+                    {product.stock > 0 ? (
+                      <motion.button
+                        onClick={(e) => handleAddToCart(product, e)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-1.5 px-2 text-xs hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors duration-300"
+                      >
+                        ADD TO CART
+                      </motion.button>
+                    ) : (
+                      <button
+                        disabled
+                        className="w-full bg-gray-200 dark:bg-gray-900 text-gray-400 dark:text-gray-600 font-semibold py-1.5 px-2 text-xs cursor-not-allowed"
+                      >
+                        OUT OF STOCK
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               );

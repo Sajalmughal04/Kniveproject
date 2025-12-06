@@ -62,7 +62,7 @@ const Hero = () => {
               transition={{ delay: 0.2, duration: 0.8 }}
               className="inline-block"
             >
-              <span className="text-white/60 uppercase tracking-[0.3em] text-xs font-light border-l-2 border-white/40 pl-4">
+              <span className="text-white/60 uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-xs font-light border-l-2 border-white/40 pl-3 sm:pl-4">
                 Premium Craftsmanship
               </span>
             </motion.div>
@@ -72,7 +72,7 @@ const Hero = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
-              className="text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[0.95] tracking-tight"
+              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[0.95] tracking-tight"
             >
               The Art of
               <br />
@@ -84,7 +84,7 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="text-white/70 text-base md:text-lg max-w-lg leading-relaxed font-light"
+              className="text-white/70 text-sm sm:text-base md:text-lg max-w-lg leading-relaxed font-light"
             >
               Every blade tells a story of dedication, forged with centuries-old techniques and modern precision engineering.
             </motion.p>
@@ -94,7 +94,7 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.8 }}
-              className="grid grid-cols-3 gap-6 pt-4"
+              className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 pt-2 sm:pt-4"
             >
               {features.map((feature, index) => (
                 <div key={index} className="border-l border-white/20 pl-4">
@@ -113,11 +113,11 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1, duration: 0.8 }}
-              className="flex items-center gap-6 pt-4"
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-6 pt-2 sm:pt-4"
             >
               <button
                 onClick={handleShopNow}
-                className="group relative bg-white text-black px-10 py-4 font-medium overflow-hidden transition-all hover:scale-105"
+                className="group relative bg-white text-black px-8 sm:px-10 py-3 sm:py-4 font-medium overflow-hidden transition-all hover:scale-105 text-sm sm:text-base"
               >
                 <span className="relative z-10 group-hover:opacity-0 transition-opacity">
                   Explore Collection
@@ -129,7 +129,7 @@ const Hero = () => {
               </button>
 
               <button
-                className="text-white/70 hover:text-white font-light text-sm uppercase tracking-wider transition-colors"
+                className="text-white/70 hover:text-white font-light text-xs sm:text-sm uppercase tracking-wider transition-colors py-2 sm:py-0"
                 onClick={() => {
                   const about = document.getElementById("about-section");
                   if (about) about.scrollIntoView({ behavior: "smooth" });
@@ -148,11 +148,10 @@ const Hero = () => {
           <button
             key={index}
             onClick={() => setCurrent(index)}
-            className={`w-1 transition-all duration-500 ${
-              current === index
+            className={`w-1 transition-all duration-500 ${current === index
                 ? "h-16 bg-white"
                 : "h-8 bg-white/30 hover:bg-white/50"
-            }`}
+              }`}
           />
         ))}
       </div>
