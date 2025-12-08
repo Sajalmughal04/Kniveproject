@@ -259,6 +259,13 @@ const ProductDetail = () => {
             ))}
           </div>
         )}
+
+      {product.description && (
+        <div className="mt-6">
+          <h3 className="text-lg font-bold mb-2">Product Description:</h3>
+          <p className="text-gray-700 dark:text-gray-300">{product.description}</p>
+        </div>
+      )}
       </div>
 
       {/* RIGHT SIDE - DETAILS SECTION */}
@@ -305,13 +312,6 @@ const ProductDetail = () => {
             {product.stock > 0 ? `${product.stock} available` : "Out of Stock"}
           </span>
         </p>
-
-        {product.description && (
-          <div className="mb-4">
-            <h3 className="text-lg font-bold mb-2">Product Description:</h3>
-            <p className="text-gray-700 dark:text-gray-300">{product.description}</p>
-          </div>
-        )}
 
         {/* Specifications */}
         {product.attributes && Object.keys(product.attributes).length > 0 && (
