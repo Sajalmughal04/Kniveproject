@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux'; // ✅ Import Redux
 import { updateUser } from '../Redux/slice/authSlice'; // ✅ Import update action
 import axios from 'axios';
+import { API_BASE_URL } from '../api';
 import { User, Mail, Phone, MapPin, Edit2, Save, X, ShoppingBag, Heart, Package } from 'lucide-react';
 
-const API_URL = "https://kniveproject-3fa4.vercel.app/api";
+const API_URL = API_BASE_URL;
 
 const ProfilePage = () => {
   const navigate = useNavigate();

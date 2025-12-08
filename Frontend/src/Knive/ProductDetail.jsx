@@ -7,8 +7,9 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../Redux/slice/cartSlice";
 import { useWishlist } from "./WishlistContext";
+import { API_BASE_URL } from "../api";
 
-const API_URL = "https://kniveproject-3fa4.vercel.app/api";
+const API_URL = API_BASE_URL;
 
 const ProductDetail = () => {
   const dispatch = useDispatch();
@@ -34,6 +35,8 @@ const ProductDetail = () => {
         console.log("📦 Full Response:", response.data);
         console.log("📦 Product Data:", productData);
         console.log("💰 Price:", productData.price);
+        console.log("🔍 Attributes:", productData.attributes);
+        console.log("🔍 Attributes type:", typeof productData.attributes);
         console.log("✅ Product extracted successfully!");
 
         setProduct(productData);
@@ -119,13 +122,12 @@ const ProductDetail = () => {
     ? product.images.map(img => img.url)
     : ["data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23f3f4f6' width='400' height='400'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='24' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E"];
 
-  // ✅ FIXED - Use finalPrice (discounted price) instead of productPrice
   const handleAddToCart = () => {
     if (product.stock > 0) {
       dispatch(addToCart({
         id: product._id,
         name: product.title,
-        price: finalPrice, // ✅ CHANGED: Use finalPrice instead of productPrice
+        price: finalPrice,
         image: images[0],
         quantity: parseInt(quantity),
         discountType,
@@ -133,7 +135,7 @@ const ProductDetail = () => {
         finalPrice,
         hasDiscount,
         savings,
-        originalPrice: productPrice // ✅ Keep original price for reference
+        originalPrice: productPrice
       }));
 
       toast.success(`${product.title} added to cart!`, {
@@ -177,7 +179,7 @@ const ProductDetail = () => {
       _id: product._id,
       name: product.title,
       title: product.title,
-      price: finalPrice, // ✅ Use finalPrice for wishlist too
+      price: finalPrice,
       originalPrice: productPrice,
       hasDiscount,
       discountType,
@@ -268,10 +270,10 @@ const ProductDetail = () => {
           {hasDiscount ? (
             <div className="flex items-center gap-3 flex-wrap">
               <p className="text-2xl text-yellow-500 font-bold">
-                ${finalPrice.toFixed(2)}
+                Rs. {finalPrice.toFixed(2)}
               </p>
               <p className="text-lg text-gray-500 dark:text-gray-400 line-through">
-                ${productPrice.toFixed(2)}
+                Rs. {productPrice.toFixed(2)}
               </p>
               <span className="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded">
                 {discountType === 'percentage' ? `${discountValue}% OFF` : `Rs. ${discountValue} OFF`}
@@ -279,12 +281,12 @@ const ProductDetail = () => {
             </div>
           ) : (
             <p className="text-2xl text-yellow-500 font-bold">
-              ${productPrice.toFixed(2)}
+              Rs. {productPrice.toFixed(2)}
             </p>
           )}
           {hasDiscount && (
             <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-              You save ${savings.toFixed(2)}!
+              You save Rs. {savings.toFixed(2)}!
             </p>
           )}
         </div>
@@ -311,6 +313,7 @@ const ProductDetail = () => {
           </div>
         )}
 
+        {/* Specifications */}
         {product.attributes && Object.keys(product.attributes).length > 0 && (
           <div className="mb-4">
             <h3 className="text-lg font-bold mb-2">Specifications:</h3>

@@ -1,7 +1,7 @@
 import Product from "../models/Product.js";
 import { deleteFromCloudinary } from "../Middleware/uploadMiddleware.js";
 
-// ✅ Create product - FIXED DISCOUNT HANDLING
+// ✅ Create product - FIXED ATTRIBUTES & DISCOUNT HANDLING
 export const createProduct = async (req, res) => {
   try {
     console.log('📝 Create product request:', req.body);
@@ -124,17 +124,31 @@ export const createProduct = async (req, res) => {
       }];
     }
 
-    // Parse attributes if it's a string
-    let parsedAttributes = {};
+    // ⭐⭐⭐ CRITICAL: ATTRIBUTES HANDLING FOR MAP TYPE ⭐⭐⭐
+    let parsedAttributes = new Map();
     if (attributes) {
+      console.log('📦 Processing attributes...');
+      console.log('   Raw type:', typeof attributes);
+      console.log('   Raw value:', attributes);
+      
+      let attrObj = {};
+      
       if (typeof attributes === 'string') {
         try {
-          parsedAttributes = JSON.parse(attributes);
+          attrObj = JSON.parse(attributes);
+          console.log('   ✅ Parsed from string:', attrObj);
         } catch (e) {
-          console.error('Error parsing attributes:', e);
+          console.error('   ❌ Parse error:', e);
         }
-      } else if (typeof attributes === 'object') {
-        parsedAttributes = attributes;
+      } else if (typeof attributes === 'object' && attributes !== null) {
+        attrObj = attributes;
+        console.log('   ✅ Using object:', attrObj);
+      }
+      
+      if (Object.keys(attrObj).length > 0) {
+        parsedAttributes = new Map(Object.entries(attrObj));
+        console.log('   ✅ Created Map with', parsedAttributes.size, 'entries');
+        console.log('   📋 Map contents:', Array.from(parsedAttributes.entries()));
       }
     }
 
@@ -175,6 +189,7 @@ export const createProduct = async (req, res) => {
       category,
       stock,
       imageCount: imageArray.length,
+      attributesCount: parsedAttributes.size,
       discountType: finalDiscountType,
       discountValue: finalDiscountValue
     });
@@ -196,6 +211,7 @@ export const createProduct = async (req, res) => {
     console.log('💵 Original Price:', product.price);
     console.log('🏷️ Discount Type:', product.discountType);
     console.log('💰 Discount Value:', product.discountValue);
+    console.log('📦 Attributes saved:', product.attributes?.size || 0);
 
     // Calculate final price manually for response
     let calculatedFinalPrice = product.price;
@@ -210,9 +226,15 @@ export const createProduct = async (req, res) => {
     console.log('💸 Calculated Final Price:', calculatedFinalPrice);
     console.log('🎯 Has Discount:', hasDiscount);
 
+    // ✅ Convert Map to Object for JSON response
+    const productObj = product.toObject();
+    if (product.attributes && product.attributes instanceof Map) {
+      productObj.attributes = Object.fromEntries(product.attributes);
+    }
+
     // Return product with calculated fields
     const productResponse = {
-      ...product.toObject(),
+      ...productObj,
       finalPrice: calculatedFinalPrice,
       hasDiscount: hasDiscount,
       savings: hasDiscount ? (product.price - calculatedFinalPrice) : 0
@@ -233,7 +255,7 @@ export const createProduct = async (req, res) => {
   }
 };
 
-// ✅ Update product - FIXED DISCOUNT HANDLING
+// ✅ Update product - FIXED ATTRIBUTES & DISCOUNT HANDLING
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -250,7 +272,6 @@ export const updateProduct = async (req, res) => {
         console.log('📦 Found productData JSON string, parsing...');
         const parsedData = JSON.parse(req.body.productData);
         updateData = { ...updateData, ...parsedData };
-        // Remove the raw string field
         delete updateData.productData;
       } catch (error) {
         console.error('❌ Failed to parse productData:', error);
@@ -274,7 +295,6 @@ export const updateProduct = async (req, res) => {
     if (req.files && req.files.length > 0) {
       console.log('🔄 Updating product images...');
 
-      // Delete old images from Cloudinary
       if (existingProduct.images?.length > 0) {
         console.log('🗑️ Deleting', existingProduct.images.length, 'old images from Cloudinary...');
         for (const image of existingProduct.images) {
@@ -349,11 +369,35 @@ export const updateProduct = async (req, res) => {
       }
     }
 
-    if (updateData.attributes && typeof updateData.attributes === 'string') {
-      try {
-        updateData.attributes = JSON.parse(updateData.attributes);
-      } catch (e) {
-        console.error('Error parsing attributes:', e);
+    // ⭐⭐⭐ CRITICAL: ATTRIBUTES HANDLING FOR MAP TYPE ⭐⭐⭐
+    if (updateData.attributes !== undefined) {
+      console.log('📦 Processing attributes...');
+      console.log('   Raw attributes type:', typeof updateData.attributes);
+      console.log('   Raw attributes value:', updateData.attributes);
+      
+      let parsedAttributes = {};
+      
+      if (typeof updateData.attributes === 'string') {
+        try {
+          parsedAttributes = JSON.parse(updateData.attributes);
+          console.log('   ✅ Parsed from string:', parsedAttributes);
+        } catch (e) {
+          console.error('   ❌ Failed to parse attributes string:', e);
+          parsedAttributes = {};
+        }
+      } else if (typeof updateData.attributes === 'object' && updateData.attributes !== null) {
+        parsedAttributes = updateData.attributes;
+        console.log('   ✅ Using object directly:', parsedAttributes);
+      }
+      
+      // Convert to Map for Mongoose
+      if (Object.keys(parsedAttributes).length > 0) {
+        updateData.attributes = new Map(Object.entries(parsedAttributes));
+        console.log('   ✅ Converted to Map with', updateData.attributes.size, 'entries');
+        console.log('   📋 Map contents:', Array.from(updateData.attributes.entries()));
+      } else {
+        updateData.attributes = new Map();
+        console.log('   ⚠️ Empty attributes, using empty Map');
       }
     }
 
@@ -380,7 +424,6 @@ export const updateProduct = async (req, res) => {
       console.log('💰 Updating discount value:', updateData.discountValue);
     }
 
-    // If discount type is being set to 'none', force value to 0
     if (updateData.discountType === 'none') {
       updateData.discountValue = 0;
     }
@@ -391,18 +434,25 @@ export const updateProduct = async (req, res) => {
       title: updateData.title,
       price: updateData.price,
       discountType: updateData.discountType,
-      discountValue: updateData.discountValue
+      discountValue: updateData.discountValue,
+      attributesSize: updateData.attributes?.size || 0
     });
 
-    const product = await Product.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    // ⭐ Use findById and manual update for better Map handling
+    const product = await Product.findById(id);
+    
+    // Update fields manually
+    Object.keys(updateData).forEach(key => {
+      product[key] = updateData[key];
+    });
+    
+    // Save to trigger pre-save hooks
+    await product.save();
 
     console.log('✅ Product updated:', product._id);
     console.log('💵 Price:', product.price);
     console.log('🏷️ Discount:', product.discountType, '-', product.discountValue);
+    console.log('📦 Attributes:', product.attributes?.size || 0, 'entries');
 
     // Calculate final price for response
     let calculatedFinalPrice = product.price;
@@ -414,13 +464,20 @@ export const updateProduct = async (req, res) => {
 
     const hasDiscount = product.discountValue > 0 && product.discountType !== 'none';
 
+    // ✅ Convert Map to Object for JSON response
+    const productObj = product.toObject();
+    if (product.attributes && product.attributes instanceof Map) {
+      productObj.attributes = Object.fromEntries(product.attributes);
+      console.log('📤 Sending attributes:', productObj.attributes);
+    }
+
     console.log('💸 Final Price:', calculatedFinalPrice);
 
     res.status(200).json({
       success: true,
       message: "Product updated successfully",
       product: {
-        ...product.toObject(),
+        ...productObj,
         finalPrice: calculatedFinalPrice,
         hasDiscount: hasDiscount,
         savings: hasDiscount ? (product.price - calculatedFinalPrice) : 0
@@ -512,8 +569,18 @@ export const getAllProducts = async (req, res) => {
         }
       }
 
+      // ✅ Convert product to object and fix attributes Map serialization
+      const productObj = product.toObject();
+
+      // Convert attributes Map to plain object
+      if (product.attributes && product.attributes instanceof Map) {
+        productObj.attributes = Object.fromEntries(product.attributes);
+      } else if (!productObj.attributes || typeof productObj.attributes !== 'object') {
+        productObj.attributes = {};
+      }
+
       return {
-        ...product.toObject(),
+        ...productObj,
         finalPrice,
         hasDiscount,
         savings: product.price - finalPrice
@@ -559,8 +626,18 @@ export const getProductById = async (req, res) => {
       }
     }
 
+    // ✅ Convert product to object and fix attributes Map serialization
+    const productObj = product.toObject();
+
+    // Convert attributes Map to plain object
+    if (product.attributes && product.attributes instanceof Map) {
+      productObj.attributes = Object.fromEntries(product.attributes);
+    } else if (!productObj.attributes || typeof productObj.attributes !== 'object') {
+      productObj.attributes = {};
+    }
+
     const productWithPrice = {
-      ...product.toObject(),
+      ...productObj,
       finalPrice,
       hasDiscount,
       savings: product.price - finalPrice

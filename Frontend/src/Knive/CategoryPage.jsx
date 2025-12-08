@@ -6,8 +6,9 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../Redux/slice/cartSlice"; // Update path according to your structure
 import SkeletonCard from "./SkeletonCard";
 import SkeletonImage from "./SkeletonImage";
+import { API_BASE_URL } from "../api";
 
-const API_URL = "https://kniveproject-3fa4.vercel.app/api";
+const API_URL = API_BASE_URL;
 
 const CategoryPage = () => {
   const { slug } = useParams();

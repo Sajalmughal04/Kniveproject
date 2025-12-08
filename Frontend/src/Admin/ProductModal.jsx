@@ -79,7 +79,10 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
     if (!productForm) return;
 
     const newAttributes = [...productForm.attributes];
-    newAttributes[index][field] = value;
+    newAttributes[index] = {
+      ...newAttributes[index],
+      [field]: value
+    };
     setProductForm({ ...productForm, attributes: newAttributes });
   };
 
@@ -96,6 +99,7 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
     if (!productForm) return;
 
     const newAttributes = productForm.attributes.filter((_, i) => i !== index);
+    // Always keep at least one empty row
     setProductForm({
       ...productForm,
       attributes: newAttributes.length ? newAttributes : [{ key: '', value: '' }]
@@ -130,6 +134,7 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
     if (uploadMethod === 'file' && imageFiles.length > 0) {
       const formData = new FormData();
 
+      // ✅ FIXED: Better attribute filtering
       const attributes = {};
 
       if (productForm.attributes && Array.isArray(productForm.attributes)) {
@@ -155,7 +160,7 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
       console.log('📦 Product data structure:', {
         ...productData,
         attributesType: typeof productData.attributes,
-        attributesConstructor: productData.attributes.constructor.name
+        attributesCount: Object.keys(productData.attributes).length
       });
 
       formData.append('productData', JSON.stringify(productData));
@@ -226,12 +231,12 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
               required
             >
               <option value="">Select Category</option>
-              <option value="Kitchen Knives">Kitchen Knives</option>
-              <option value="Swords">Swords</option>
-              <option value="Axes">Axes</option>
-              <option value="Hunting Knives">Hunting Knives</option>
-              <option value="Folding Knives">Folding Knives</option>
-              <option value="Raw Materials">Raw Materials</option>
+              <option value="kitchen knives">Kitchen Knives</option>
+              <option value="swords">Swords</option>
+              <option value="axes">Axes</option>
+              <option value="hunting knives">Hunting Knives</option>
+              <option value="folding knives">Folding Knives</option>
+              <option value="raw materials">Raw Materials</option>
             </select>
           </div>
 
@@ -423,47 +428,90 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
             )}
           </div>
 
-          {/* Attributes */}
+          {/* ✅ FIXED ATTRIBUTES SECTION */}
           <div className="border-t pt-4">
             <label className="block text-sm font-medium mb-3">
-              Attributes (Optional)
+              Product Specifications (Optional)
+              <span className="text-xs text-gray-500 ml-2">
+                Add product details like Blade Length, Material, etc.
+              </span>
             </label>
+            
             <div className="space-y-2">
-              {(productForm?.attributes || [{ key: '', value: '' }]).map((attr, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Key"
-                    value={attr.key}
-                    onChange={(e) => handleAttributeChange(index, 'key', e.target.value)}
-                    className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Value"
-                    value={attr.value}
-                    onChange={(e) => handleAttributeChange(index, 'value', e.target.value)}
-                    className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                  />
-                  {(productForm?.attributes?.length || 0) > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeAttribute(index)}
-                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  )}
-                </div>
-              ))}
+              {/* ✅ Always show at least one attribute row */}
+              {(productForm?.attributes && productForm.attributes.length > 0 
+                ? productForm.attributes 
+                : [{ key: '', value: '' }]
+              ).map((attr, index) => {
+                const currentKey = (attr?.key || '');
+                const currentValue = (attr?.value || '');
+                const hasValues = currentKey.trim() || currentValue.trim();
+                
+                return (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g., Blade Length"
+                      value={currentKey}
+                      onChange={(e) => handleAttributeChange(index, 'key', e.target.value)}
+                      className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="e.g., 8 inches"
+                      value={currentValue}
+                      onChange={(e) => handleAttributeChange(index, 'value', e.target.value)}
+                      className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                    />
+                    
+                    {/* Only show remove button if there are multiple rows */}
+                    {(productForm?.attributes?.length > 1) && (
+                      <button
+                        type="button"
+                        onClick={() => removeAttribute(index)}
+                        className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center justify-center"
+                        title="Remove this attribute"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              
               <button
                 type="button"
                 onClick={addAttribute}
-                className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1 hover:underline"
+                className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1 hover:underline font-medium"
               >
                 <Plus size={16} />
-                Add attribute
+                Add specification
               </button>
+              
+              {/* ✅ Preview current valid attributes */}
+              {(() => {
+                const validAttrs = (productForm?.attributes || []).filter(
+                  attr => attr?.key?.trim() && attr?.value?.trim()
+                );
+                
+                if (validAttrs.length > 0) {
+                  return (
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-xs font-semibold text-blue-800 mb-2">
+                        Preview ({validAttrs.length} specification{validAttrs.length > 1 ? 's' : ''}):
+                      </p>
+                      <ul className="text-xs text-blue-700 space-y-1">
+                        {validAttrs.map((attr, i) => (
+                          <li key={i}>
+                            <strong>{attr.key.trim()}:</strong> {attr.value.trim()}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </div>
 

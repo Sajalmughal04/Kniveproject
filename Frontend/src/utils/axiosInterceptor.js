@@ -1,7 +1,8 @@
 // Frontend/src/utils/axiosInterceptor.js
 import axios from 'axios';
+import { API_BASE_URL } from '../api';
 
-const API_URL = 'https://kniveproject-3fa4.vercel.app/api';
+const API_URL = API_BASE_URL;
 
 let isRefreshing = false;
 let failedQueue = [];

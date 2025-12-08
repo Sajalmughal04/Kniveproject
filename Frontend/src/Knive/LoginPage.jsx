@@ -4,8 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { loginStart, loginSuccess, loginFailure, clearError } from "../Redux/slice/authSlice.js";
 import { showToast } from "../Redux/slice/cartSlice.js";
+import { API_BASE_URL } from "../api";
 
-const API_URL = "https://kniveproject-3fa4.vercel.app/api/auth";
+const API_URL = `${API_BASE_URL}/auth`;
 
 const LoginPage = () => {
   const navigate = useNavigate();

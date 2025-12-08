@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
+import { API_BASE_URL } from '../api';
 
 const ProtectedRoute = ({ children }) => {
   const [authState, setAuthState] = useState({
@@ -153,7 +154,7 @@ const ProtectedRoute = ({ children }) => {
         console.log('🔄 Verifying with backend API...');
         console.log('🔄 ========================================');
 
-        const response = await axios.get('https://kniveproject-3fa4.vercel.app/api/admin/profile', {
+        const response = await axios.get(`${API_BASE_URL}/admin/profile`, {
           headers: {
             'Authorization': `Bearer ${adminToken}`
           },

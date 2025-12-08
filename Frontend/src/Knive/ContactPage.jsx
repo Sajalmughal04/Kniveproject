@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Send, CheckCircle, XCircle } from "lucide-react";
+import { API_BASE_URL } from "../api";
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -25,10 +26,10 @@ const ContactPage = () => {
 
     try {
       // Check if backend is running
-      console.log('Sending request to:', 'https://kniveproject-3fa4.vercel.app/api/contact');
+      console.log('Sending request to:', `${API_BASE_URL}/contact`);
       console.log('Form data:', formData);
 
-      const response = await fetch('https://kniveproject-3fa4.vercel.app/api/contact', {
+      const response = await fetch(`${API_BASE_URL}/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

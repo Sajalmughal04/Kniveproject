@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { API_BASE_URL } from '../api';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
@@ -19,7 +20,7 @@ export default function PaymentSuccess() {
   const fetchPaymentStatus = async () => {
     try {
       const response = await fetch(
-        `https://kniveproject-3fa4.vercel.app/api/payment/payment-status/${paymentIntentId}`
+        `${API_BASE_URL}/payment/payment-status/${paymentIntentId}`
       );
       const data = await response.json();
 

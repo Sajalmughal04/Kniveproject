@@ -18,7 +18,7 @@ const Footer = () => {
           {/* About Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              <h2 className="text-2xl font-bold text-white">BladeCraft</h2>
+              <h2 className="text-2xl font-bold text-white">RZKnives</h2>
             </div>
             <p className="text-gray-400 leading-relaxed text-sm">
               Premium-quality kitchen knives crafted for both professional chefs and home cooks. 
@@ -106,7 +106,7 @@ const Footer = () => {
             <div className="space-y-4">
               {/* Email */}
               <a 
-                href="mailto:support@knifehub.com?subject=Customer%20Inquiry&body=Hello%20BladeCraft%20Team," 
+                href="mailto:support@knifehub.com?subject=Customer%20Inquiry&body=Hello%20RZKnives%20Team," 
                 className="flex items-start gap-3 text-gray-400 hover:text-yellow-500 transition-all duration-300 group cursor-pointer"
                 onClick={(e) => {
                   window.location.href = 'mailto:support@knifehub.com';
@@ -163,7 +163,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} <span className="text-yellow-500 font-semibold">BladeCraft</span>. All Rights Reserved.
+              © {new Date().getFullYear()} <span className="text-yellow-500 font-semibold">RZKnives</span>. All Rights Reserved.
             </p>
             <div className="flex gap-6 text-sm">
               <Link to="/privacy" className="text-gray-400 hover:text-yellow-500 transition">Privacy Policy</Link>

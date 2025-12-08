@@ -7,6 +7,7 @@ import {
   showToast
 } from '../Redux/slice/cartSlice';
 import StripeCheckout from './StripeCheckout';
+import { API_BASE_URL } from '../api';
 
 export default function CheckoutPage() {
   const dispatch = useDispatch();
@@ -38,7 +39,7 @@ export default function CheckoutPage() {
     paymentMethod: 'cash_on_delivery'
   });
 
-  const API_URL = 'https://kniveproject-3fa4.vercel.app/api';
+  const API_URL = API_BASE_URL;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

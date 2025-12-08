@@ -8,8 +8,9 @@ import { useWishlist } from "./WishlistContext";
 import { Heart, Tag } from "lucide-react";
 import SkeletonCard from "./SkeletonCard";
 import SkeletonImage from "./SkeletonImage";
+import { API_BASE_URL } from "../api";
 
-const API_URL = "https://kniveproject-3fa4.vercel.app/api";
+const API_URL = API_BASE_URL;
 
 const AllProducts = ({ searchTerm = "" }) => {
   const navigate = useNavigate();
@@ -241,7 +242,7 @@ const AllProducts = ({ searchTerm = "" }) => {
 
         {/* Product Grid - EQUAL HEIGHT CARDS */}
         <div className={viewMode === "grid"
-          ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+          ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4"
           : "flex flex-col gap-4"
         }>
           {loading
@@ -265,7 +266,7 @@ const AllProducts = ({ searchTerm = "" }) => {
                   onClick={() => navigate(`/product/${product._id}`)}
                 >
                   {/* Image Container */}
-                  <div className={`relative overflow-hidden bg-gray-100 dark:bg-gray-900 flex-shrink-0 ${viewMode === "list" ? "w-40 h-40" : "w-full h-40"}`}>
+                  <div className={`relative overflow-hidden bg-gray-100 dark:bg-gray-900 flex-shrink-0 ${viewMode === "list" ? "w-40 h-40" : "w-full h-64"}`}>
                     <SkeletonImage
                       src={product.images?.[0]?.url || "https://via.placeholder.com/400"}
                       alt={product.title}

@@ -9,6 +9,7 @@ import {
 
 import { useSelector } from "react-redux";
 import { selectCartItems, selectCartTotal } from "../Redux/slice/cartSlice";
+import { API_BASE_URL } from "../api";
 
 let stripePromise = null;
 
@@ -16,7 +17,7 @@ let stripePromise = null;
 const getStripePromise = async () => {
   if (!stripePromise) {
     try {
-      const response = await fetch("https://kniveproject-3fa4.vercel.app/api/payment/config");
+      const response = await fetch(`${API_BASE_URL}/payment/config`);
       const { publishableKey } = await response.json();
       stripePromise = loadStripe(publishableKey);
     } catch (error) {
@@ -122,7 +123,7 @@ export default function StripeCheckout({ customerInfo, onSuccess }) {
       setLoading(true);
 
       const response = await fetch(
-        "https://kniveproject-3fa4.vercel.app/api/payment/create-payment-intent",
+        `${API_BASE_URL}/payment/create-payment-intent`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

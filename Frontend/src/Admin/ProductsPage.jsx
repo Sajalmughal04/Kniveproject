@@ -12,7 +12,7 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
     title: '',
     price: '',
     stock: '',
-    category: 'kitchen',
+    category: 'kitchen knives',
     description: '',
     images: [''],
     featured: false,
@@ -84,12 +84,35 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
           return;
         }
 
+        console.log('📋 Processing attributes from form:', productForm.attributes);
+
+        // ✅ FIXED: Better attribute filtering that preserves valid entries
         const attributesObject = {};
-        productForm.attributes.forEach(attr => {
-          if (attr.key.trim() && attr.value.trim()) {
-            attributesObject[attr.key.trim()] = attr.value.trim();
-          }
-        });
+        
+        if (productForm.attributes && Array.isArray(productForm.attributes)) {
+          productForm.attributes.forEach((attr, index) => {
+            // Skip if attr is undefined/null
+            if (!attr) {
+              console.log(`  ⚠️ Skipped undefined attribute ${index + 1}`);
+              return;
+            }
+
+            // Get trimmed values
+            const key = attr.key ? String(attr.key).trim() : '';
+            const value = attr.value ? String(attr.value).trim() : '';
+
+            // Only add if BOTH key AND value are non-empty
+            if (key && value) {
+              attributesObject[key] = value;
+              console.log(`  ✅ Added attribute ${index + 1}: "${key}" = "${value}"`);
+            } else {
+              console.log(`  ⚠️ Skipped empty attribute ${index + 1}: key="${key}", value="${value}"`);
+            }
+          });
+        }
+
+        console.log('📦 Final attributes object:', attributesObject);
+        console.log('📊 Total valid attributes:', Object.keys(attributesObject).length);
 
         const productData = {
           title: productForm.title.trim(),
@@ -100,10 +123,12 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
           imageUrls: validImages,
           uploadMethod: 'url',
           featured: productForm.featured || false,
-          attributes: attributesObject,
+          attributes: attributesObject, // Send as plain object
           discountType: productForm.discountType || 'none',
           discountValue: productForm.discountType !== 'none' ? Number(productForm.discountValue) || 0 : 0
         };
+
+        console.log('📤 Sending product data:', productData);
 
         if (editingProduct) {
           console.log('📝 Updating product:', editingProduct._id);
@@ -138,7 +163,7 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       console.error('❌ Error message:', error.message);
 
       if (error.code === 'ERR_NETWORK') {
-        alert('❌ Network Error! Backend server is not running.\\n\\nPlease start backend: cd backend && npm start');
+        alert('❌ Network Error! Backend server is not running.\n\nPlease start backend: cd backend && npm start');
       } else if (error.response?.status === 401) {
         alert('❌ Authentication failed! Please login again.');
         localStorage.removeItem('adminToken');
@@ -146,7 +171,7 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       } else if (error.response?.status === 400) {
         alert(`❌ Validation Error: ${error.response?.data?.message || 'Invalid data'}`);
       } else {
-        alert(`❌ Failed to save product!\\n\\nError: ${error.response?.data?.message || error.message}\\n\\nCheck console for details.`);
+        alert(`❌ Failed to save product!\n\nError: ${error.response?.data?.message || error.message}\n\nCheck console for details.`);
       }
     }
     setLoading(false);
@@ -157,7 +182,7 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       title: '',
       price: '',
       stock: '',
-      category: 'kitchen',
+      category: 'kitchen knives',
       description: '',
       images: [''],
       featured: false,
@@ -167,8 +192,11 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
     });
   };
 
+  // ✅ FIXED: handleEditProduct with proper attribute handling
   const handleEditProduct = (product) => {
     console.log('✏️ Editing product:', product);
+    console.log('📋 Product attributes:', product.attributes);
+    console.log('📋 Attributes type:', typeof product.attributes);
     console.log('💰 Discount Type:', product.discountType);
     console.log('💸 Discount Value:', product.discountValue);
 
@@ -178,19 +206,86 @@ export default function ProductsPage({ products, fetchProducts, setLoading, API_
       ? product.images.map(img => typeof img === 'string' ? img : img.url)
       : [''];
 
-    const attributesArray = product.attributes && typeof product.attributes === 'object'
-      ? Object.entries(product.attributes).map(([key, value]) => ({ key, value }))
-      : [{ key: '', value: '' }];
+    // ✅ FIXED: Convert attributes object to array format with strict validation
+    let attributesArray = [{ key: '', value: '' }]; // Default empty attribute
+
+    if (product.attributes && typeof product.attributes === 'object') {
+      console.log('📋 Processing attributes for form...');
+      
+      let entries = [];
+      
+      // Handle both Map and Object
+      if (product.attributes instanceof Map) {
+        entries = Array.from(product.attributes.entries());
+      } else {
+        entries = Object.entries(product.attributes);
+      }
+      
+      console.log('📋 Raw entries:', entries);
+
+      // ✅ STRICT FILTERING - Only valid key-value pairs
+      const validEntries = entries.filter(([key, value]) => {
+        // Check if key and value exist
+        if (!key || !value) {
+          console.log(`  - ❌ Filtered empty: "${key}" = "${value}"`);
+          return false;
+        }
+        
+        // Convert to string and trim
+        const keyStr = String(key).trim();
+        const valueStr = String(value).trim();
+        
+        // Check if still not empty after trimming
+        if (keyStr === '' || valueStr === '') {
+          console.log(`  - ❌ Filtered empty after trim: "${keyStr}" = "${valueStr}"`);
+          return false;
+        }
+        
+        // Filter MongoDB internal fields
+        if (keyStr.startsWith('_') || keyStr.startsWith('$')) {
+          console.log(`  - ❌ Filtered MongoDB field: "${keyStr}"`);
+          return false;
+        }
+        
+        // Filter invalid values
+        if (valueStr === 'undefined' || valueStr === 'null' || valueStr === '[object Object]') {
+          console.log(`  - ❌ Filtered invalid value: "${keyStr}" = "${valueStr}"`);
+          return false;
+        }
+        
+        console.log(`  - ✅ Valid entry: "${keyStr}" = "${valueStr}"`);
+        return true;
+      });
+
+      console.log('📋 Valid entries count:', validEntries.length);
+
+      // If we have valid entries, use them; otherwise add one empty row
+      if (validEntries.length > 0) {
+        attributesArray = validEntries.map(([key, value]) => ({
+          key: String(key).trim(),
+          value: String(value).trim()
+        }));
+        // Add one empty row at the end for adding new attributes
+        attributesArray.push({ key: '', value: '' });
+        console.log('✅ Created attributes array with', validEntries.length, 'items + 1 empty row');
+      } else {
+        console.log('⚠️ No valid attributes found, using empty array');
+      }
+    } else {
+      console.log('⚠️ No attributes found in product');
+    }
+
+    console.log('📋 Final attributesArray for form:', attributesArray);
 
     setProductForm({
       title: product.title || '',
       price: product.price || '',
       stock: product.stock || 0,
-      category: product.category || 'kitchen',
+      category: product.category || 'kitchen knives',
       description: product.description || '',
       images: imageUrls,
       featured: product.featured || false,
-      attributes: attributesArray.length > 0 ? attributesArray : [{ key: '', value: '' }],
+      attributes: attributesArray, // ✅ Properly filtered and formatted
       discountType: product.discountType || 'none',
       discountValue: product.discountValue || ''
     });

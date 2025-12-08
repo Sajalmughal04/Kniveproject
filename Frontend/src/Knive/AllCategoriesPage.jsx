@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { API_BASE_URL } from "../api";
 
-const API_URL = "https://kniveproject-3fa4.vercel.app/api";
+const API_URL = API_BASE_URL;
 
 const AllCategoriesPage = () => {
   const navigate = useNavigate();

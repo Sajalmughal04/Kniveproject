@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import axios from "axios";
+import { API_BASE_URL } from "../api";
 import { logout as reduxLogout } from "../Redux/slice/authSlice.js";
 import Sidebar from "./Sidebar";
 import Dashboard from "./Dashboard";
@@ -11,7 +12,7 @@ import CustomersPage from "./CustomersPage";
 import PromoCodesPage from "./PromoCodesPage";
 import LoadingIndicator from "./LoadingIndicator";
 
-const API_URL = "https://kniveproject-3fa4.vercel.app/api";
+const API_URL = API_BASE_URL;
 
 const setupAxios = () => {
   const token = localStorage.getItem("adminToken");

@@ -1,5 +1,6 @@
 // 1. AuthContext.jsx - User Authentication Context
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { API_BASE_URL } from '../api';
 
 const AuthContext = createContext();
 
@@ -7,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = 'https://kniveproject-3fa4.vercel.app/api';
+  const API_URL = API_BASE_URL;
 
   // Check if user is logged in on mount
   useEffect(() => {

@@ -107,7 +107,7 @@ const Navbar = ({ setSearchTerm, theme, toggleTheme }) => {
           onClick={() => navigate("/")}
           className="text-2xl font-extrabold tracking-wide cursor-pointer relative group text-gray-900 dark:text-white"
         >
-          Blade<span className="text-yellow-500">Craft</span>
+          RZ<span className="text-yellow-500">Knives</span>
           <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-500 transition-all group-hover:w-full"></span>
         </h1>
 
