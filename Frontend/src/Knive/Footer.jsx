@@ -14,17 +14,17 @@ const Footer = () => {
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          
+
           {/* About Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <h2 className="text-2xl font-bold text-white">RZKnives</h2>
             </div>
             <p className="text-gray-400 leading-relaxed text-sm">
-              Premium-quality kitchen knives crafted for both professional chefs and home cooks. 
+              Premium-quality kitchen knives crafted for both professional chefs and home cooks.
               Sharp, durable, and ergonomic tools that make cooking a pleasure.
             </p>
-            
+
             {/* Social Media Icons */}
             <div className="flex gap-3 pt-4">
               <a href="#" className="w-10 h-10 bg-white/10 hover:bg-yellow-500 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110">
@@ -58,8 +58,8 @@ const Footer = () => {
                 { to: "/track-order", label: "Track Order" }
               ].map((link) => (
                 <li key={link.to}>
-                  <Link 
-                    to={link.to} 
+                  <Link
+                    to={link.to}
                     className="text-gray-400 hover:text-yellow-500 transition-all duration-300 flex items-center gap-2 group"
                   >
                     <span className="w-0 h-0.5 bg-yellow-500 group-hover:w-4 transition-all duration-300"></span>
@@ -85,8 +85,8 @@ const Footer = () => {
                 { to: "/contact", label: "Support" }
               ].map((link) => (
                 <li key={link.to}>
-                  <Link 
-                    to={link.to} 
+                  <Link
+                    to={link.to}
                     className="text-gray-400 hover:text-yellow-500 transition-all duration-300 flex items-center gap-2 group"
                   >
                     <span className="w-0 h-0.5 bg-yellow-500 group-hover:w-4 transition-all duration-300"></span>
@@ -105,8 +105,8 @@ const Footer = () => {
             </h3>
             <div className="space-y-4">
               {/* Email */}
-              <a 
-                href="mailto:support@knifehub.com?subject=Customer%20Inquiry&body=Hello%20RZKnives%20Team," 
+              <a
+                href="mailto:support@knifehub.com?subject=Customer%20Inquiry&body=Hello%20RZKnives%20Team,"
                 className="flex items-start gap-3 text-gray-400 hover:text-yellow-500 transition-all duration-300 group cursor-pointer"
                 onClick={(e) => {
                   window.location.href = 'mailto:support@knifehub.com';
@@ -121,22 +121,24 @@ const Footer = () => {
                 </div>
               </a>
 
-              {/* Phone */}
-              <a 
-                href="tel:+923466170539" 
+              {/* Phone - WhatsApp Link */}
+              <a
+                href="https://wa.me/923466170539?text=Hello%20RZKnives,%20I%20have%20a%20question"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-start gap-3 text-gray-400 hover:text-yellow-500 transition-all duration-300 group cursor-pointer"
               >
                 <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-yellow-500/20 transition-all">
                   <Phone size={18} />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 mb-0.5">Phone</p>
+                  <p className="text-xs text-gray-500 mb-0.5">WhatsApp</p>
                   <p className="text-sm">+92 346 6170539</p>
                 </div>
               </a>
 
               {/* Address - Google Maps Link */}
-              <a 
+              <a
                 href="https://www.google.com/maps?q=32.441700,74.118200"
                 target="_blank"
                 rel="noopener noreferrer"
