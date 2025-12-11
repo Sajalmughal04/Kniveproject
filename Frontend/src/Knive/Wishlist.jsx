@@ -6,6 +6,7 @@ import { addToCart } from "../Redux/slice/cartSlice"; // ✅ Redux Action
 import { useWishlist } from "./WishlistContext";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { formatUSD } from "../utils/currency";
 
 const Wishlist = () => {
   const navigate = useNavigate();
@@ -148,11 +149,11 @@ const Wishlist = () => {
                     {/* Price */}
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">
-                        ${productPrice.toFixed(2)}
+                        {formatUSD(productPrice)}
                       </span>
                       {item.oldPrice && (
                         <span className="text-sm text-gray-400 line-through">
-                          ${item.oldPrice.toFixed(2)}
+                          {formatUSD(item.oldPrice)}
                         </span>
                       )}
                     </div>

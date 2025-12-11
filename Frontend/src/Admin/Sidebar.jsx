@@ -1,9 +1,12 @@
 import React from 'react';
 import { LayoutDashboard, Package, ShoppingCart, Users, Tag, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logout } from '../Redux/slice/authSlice';
 
 export default function Sidebar({ currentPage, setCurrentPage, stats }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const menuItems = [
     {
@@ -40,8 +43,17 @@ export default function Sidebar({ currentPage, setCurrentPage, stats }) {
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
-      localStorage.removeItem('adminToken');
+      console.log('🚪 Admin logout initiated');
+
+      // Dispatch Redux logout action (clears all auth state, cart, wishlist)
+      dispatch(logout());
+
+      // Clear axios headers
       delete window.axios?.defaults?.headers?.common['Authorization'];
+
+      console.log('✅ Admin logged out - redirecting to login');
+
+      // Navigate to admin login
       navigate('/admin/login');
     }
   };
@@ -61,8 +73,8 @@ export default function Sidebar({ currentPage, setCurrentPage, stats }) {
             key={item.id}
             onClick={() => setCurrentPage(item.id)}
             className={`w-full flex items-center px-4 py-3 mb-1 rounded-lg transition-all ${currentPage === item.id
-                ? 'bg-gray-100 text-gray-900 font-medium shadow-sm'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              ? 'bg-gray-100 text-gray-900 font-medium shadow-sm'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             <item.icon className="mr-3" size={20} />

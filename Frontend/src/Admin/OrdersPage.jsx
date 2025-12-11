@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RefreshCw, ShoppingCart, Eye, Trash2, Package } from 'lucide-react';
 import axios from 'axios';
+import { formatUSD } from '../utils/currency';
 
 export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -128,7 +129,7 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
                     </div>
                   </td>
                   <td className="px-6 py-4 font-bold text-gray-900">
-                    Rs. {order.totalAmount?.toFixed(2) || '0.00'}
+                    {formatUSD(order.totalAmount || 0)}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {new Date(order.createdAt).toLocaleDateString('en-US', {
@@ -239,11 +240,11 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
                       <div className="flex-1">
                         <h5 className="font-semibold">{item.productName}</h5>
                         <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                        <p className="text-sm text-gray-600">Price: Rs. {item.price?.toFixed(2)}</p>
+                        <p className="text-sm text-gray-600">Price: {formatUSD(item.price || 0)}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-gray-900">
-                          Rs. {(item.price * item.quantity)?.toFixed(2)}
+                          {formatUSD((item.price || 0) * (item.quantity || 0))}
                         </p>
                       </div>
                     </div>
@@ -256,19 +257,19 @@ export default function OrdersPage({ orders, fetchOrders, setLoading, API_URL })
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>Rs. {selectedOrder.subtotal?.toFixed(2)}</span>
+                    <span>{formatUSD(selectedOrder.subtotal || 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping:</span>
-                    <span>Rs. {selectedOrder.shippingCost?.toFixed(2)}</span>
+                    <span>{formatUSD(selectedOrder.shippingCost || 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax:</span>
-                    <span>Rs. {selectedOrder.tax?.toFixed(2)}</span>
+                    <span>{formatUSD(selectedOrder.tax || 0)}</span>
                   </div>
                   <div className="flex justify-between text-xl font-bold border-t pt-2">
                     <span>Total:</span>
-                    <span className="text-gray-900">Rs. {selectedOrder.totalAmount?.toFixed(2)}</span>
+                    <span className="text-gray-900">{formatUSD(selectedOrder.totalAmount || 0)}</span>
                   </div>
                 </div>
               </div>

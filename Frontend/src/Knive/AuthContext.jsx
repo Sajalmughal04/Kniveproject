@@ -1,6 +1,7 @@
 // 1. AuthContext.jsx - User Authentication Context
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_BASE_URL } from '../api';
+import { formatUSD } from '../utils/currency';
 
 const AuthContext = createContext();
 
@@ -330,7 +331,7 @@ export default function CartPage() {
                   {item.name}
                 </h3>
                 <p className="text-yellow-500 font-bold text-lg mt-1">
-                  Rs. {item.price.toFixed(2)}
+                  {formatUSD(item.price)}
                 </p>
 
                 <div className="flex items-center gap-3 mt-3">
@@ -362,7 +363,7 @@ export default function CartPage() {
               <div className="text-right">
                 <p className="text-gray-600 dark:text-gray-400 text-sm">Subtotal</p>
                 <p className="text-2xl font-bold text-yellow-500">
-                  Rs. {(item.price * item.quantity).toFixed(2)}
+                  {formatUSD(item.price * item.quantity)}
                 </p>
               </div>
             </motion.div>
@@ -385,7 +386,7 @@ export default function CartPage() {
               Total Amount:
             </span>
             <span className="text-3xl font-bold text-yellow-500">
-              Rs. {getCartTotal().toFixed(2)}
+              {formatUSD(getCartTotal())}
             </span>
           </div>
 

@@ -77,10 +77,16 @@ export const setupAxiosInterceptors = (store) => {
             const refreshToken = localStorage.getItem('refreshToken') || localStorage.getItem('adminRefreshToken');
 
             if (!refreshToken) {
-                console.log('❌ No refresh token available');
+                console.log('❌ No refresh token available - logging out');
                 isRefreshing = false;
-                // Redirect to login
-                window.location.href = '/login';
+
+                // Dispatch Redux logout
+                store.dispatch({ type: 'auth/logout' });
+
+                // Redirect to appropriate login page
+                const isAdminRoute = window.location.pathname.startsWith('/admin');
+                window.location.href = isAdminRoute ? '/admin/login' : '/login';
+
                 return Promise.reject(error);
             }
 
@@ -131,15 +137,14 @@ export const setupAxiosInterceptors = (store) => {
                 console.error('❌ Token refresh failed:', refreshError);
                 processQueue(refreshError, null);
 
-                // Clear tokens and redirect to login
-                localStorage.removeItem('token');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('adminToken');
-                localStorage.removeItem('adminRefreshToken');
-                localStorage.removeItem('userData');
-                localStorage.removeItem('adminData');
+                // Dispatch Redux logout action to clear all state
+                console.log('🚪 Token expired - dispatching logout');
+                store.dispatch({ type: 'auth/logout' });
 
-                window.location.href = '/login';
+                // Redirect to login
+                const isAdminRoute = window.location.pathname.startsWith('/admin');
+                window.location.href = isAdminRoute ? '/admin/login' : '/login';
+
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;

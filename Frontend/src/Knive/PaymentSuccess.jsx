@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../api';
+import { formatUSD } from '../utils/currency';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
@@ -100,7 +101,7 @@ export default function PaymentSuccess() {
                 <div className="flex justify-between text-gray-300 border-t border-white/20 pt-3">
                   <span className="text-lg">Total Amount:</span>
                   <span className="font-bold text-yellow-400 text-lg">
-                    Rs. {orderDetails.totalAmount.toFixed(2)}
+                  {formatUSD(orderDetails.totalAmount)}
                   </span>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Upload, Link } from 'lucide-react';
+import { formatUSD } from '../utils/currency';
 
 export default function ProductModal({ editingProduct, productForm, setProductForm, onSubmit, onClose }) {
   const [uploadMethod, setUploadMethod] = useState('url');
@@ -243,7 +244,7 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
           {/* Price and Stock */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Price (PKR) *</label>
+              <label className="block text-sm font-medium mb-2">Price (USD) *</label>
               <input
                 type="number"
                 name="price"
@@ -283,7 +284,7 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
                 >
                   <option value="none">No Discount</option>
                   <option value="percentage">Percentage (%)</option>
-                  <option value="fixed">Fixed Amount (PKR)</option>
+                  <option value="fixed">Fixed Amount (USD)</option>
                 </select>
               </div>
               <div>
@@ -303,8 +304,8 @@ export default function ProductModal({ editingProduct, productForm, setProductFo
             {savings > 0 && (
               <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-800">
-                  <strong>Final Price:</strong> PKR {finalPrice.toFixed(2)}
-                  <span className="ml-2 text-green-600">(Save PKR {savings.toFixed(2)})</span>
+                  <strong>Final Price:</strong> {formatUSD(finalPrice)}
+                  <span className="ml-2 text-green-600">(Save {formatUSD(savings)})</span>
                 </p>
               </div>
             )}

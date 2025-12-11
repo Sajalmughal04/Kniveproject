@@ -113,6 +113,12 @@ export default function StripeCheckout({ customerInfo, onSuccess }) {
   const [orderId, setOrderId] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
   const [loading, setLoading] = useState(true);
+  const [stripePromiseState, setStripePromiseState] = useState(null);
+
+  // Load Stripe once on mount
+  useEffect(() => {
+    getStripePromise().then(setStripePromiseState);
+  }, []);
 
   useEffect(() => {
     createPaymentIntent();
@@ -163,7 +169,7 @@ export default function StripeCheckout({ customerInfo, onSuccess }) {
     }
   };
 
-  if (loading)
+  if (loading || !stripePromiseState)
     return (
       <div className="p-8 bg-white/5 rounded-xl text-white">
         Loading payment...
@@ -177,7 +183,7 @@ export default function StripeCheckout({ customerInfo, onSuccess }) {
 
       {clientSecret && (
         <Elements
-          stripe={getStripePromise()}
+          stripe={stripePromiseState}
           options={{
             clientSecret,
             appearance: { theme: "night" },

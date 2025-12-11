@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Plus, Edit2, Trash2, Tag, Calendar, TrendingUp, ToggleLeft, ToggleRight } from 'lucide-react';
 import axios from 'axios';
+import { formatUSD } from '../utils/currency';
 
 export default function PromoCodesPage({ API_URL }) {
     const [promoCodes, setPromoCodes] = useState([]);
@@ -206,7 +207,7 @@ export default function PromoCodesPage({ API_URL }) {
                                         <span className="font-semibold text-gray-900">
                                             {promo.discountType === 'percentage'
                                                 ? `${promo.discountValue}%`
-                                                : `Rs. ${promo.discountValue}`
+                                                : `${formatUSD(promo.discountValue || 0)}`
                                             }
                                         </span>
                                         <span className="text-xs text-gray-500 ml-2">

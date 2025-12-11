@@ -9,6 +9,7 @@ import { Heart, Tag } from "lucide-react";
 import SkeletonCard from "./SkeletonCard";
 import SkeletonImage from "./SkeletonImage";
 import { API_BASE_URL } from "../api";
+import { formatUSD } from "../utils/currency";
 
 const API_URL = API_BASE_URL;
 
@@ -294,7 +295,7 @@ const AllProducts = ({ searchTerm = "" }) => {
                           <span className="font-bold text-xs">
                             {product.discountType === 'percentage'
                               ? `-${product.discountValue}%`
-                              : `-$${product.discountValue}`
+                              : `-${formatUSD(product.discountValue)}`
                             }
                           </span>
                         </div>
@@ -337,20 +338,20 @@ const AllProducts = ({ searchTerm = "" }) => {
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-1">
                             <p className="text-sm font-bold text-green-600">
-                              ${finalPrice.toLocaleString()}
+                              {formatUSD(finalPrice)}
                             </p>
                             <p className="text-xs text-gray-400 line-through">
-                              ${product.price.toLocaleString()}
+                              {formatUSD(product.price)}
                             </p>
                           </div>
                           <p className="text-xs text-green-600 font-semibold">
-                            Save ${savings.toLocaleString()}
+                            Save {formatUSD(savings)}
                           </p>
                         </div>
                       ) : (
                         <div>
                           <p className="text-sm font-bold text-black dark:text-white">
-                            ${product.price.toLocaleString()}
+                          {formatUSD(product.price)}
                           </p>
                           {/* Empty space to match discount card height */}
                           <div className="h-4"></div>

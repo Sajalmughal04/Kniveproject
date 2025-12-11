@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatUSD } from '../utils/currency';
 import { Edit2, Trash2, Tag, TrendingDown } from 'lucide-react';
 
 export default function ProductsTable({ products, onEdit, onDelete }) {
@@ -69,26 +70,26 @@ export default function ProductsTable({ products, onEdit, onDelete }) {
                         <>
                           <div className="flex items-center gap-2">
                             <p className="text-lg font-bold text-gray-900">
-                              Rs. {finalPrice?.toLocaleString() || '0'}
+                              {formatUSD(finalPrice || 0)}
                             </p>
                             <span className="bg-black text-white text-xs px-2 py-0.5 rounded-full font-bold">
                               {product.discountType === 'percentage'
                                 ? `-${product.discountValue}%`
-                                : `-Rs. ${product.discountValue}`
+                                : `-${formatUSD(product.discountValue || 0)}`
                               }
                             </span>
                           </div>
                           <p className="text-sm text-gray-400 line-through">
-                            Rs. {product.price?.toLocaleString() || '0'}
+                            {formatUSD(product.price || 0)}
                           </p>
                           <p className="text-xs text-gray-600 font-medium flex items-center gap-1">
                             <TrendingDown size={12} />
-                            Save Rs. {savings.toLocaleString()}
+                            Save {formatUSD(savings || 0)}
                           </p>
                         </>
                       ) : (
                         <p className="text-lg font-bold text-gray-900">
-                          Rs. {product.price?.toLocaleString() || '0'}
+                          {formatUSD(product.price || 0)}
                         </p>
                       )}
                     </div>

@@ -130,6 +130,8 @@ export default function CheckoutPage() {
     // If card payment, show Stripe checkout
     if (formData.paymentMethod === 'card') {
       setShowPayment(true);
+      // Scroll to top when showing payment section
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 

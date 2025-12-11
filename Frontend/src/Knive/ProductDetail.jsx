@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../Redux/slice/cartSlice";
 import { useWishlist } from "./WishlistContext";
 import { API_BASE_URL } from "../api";
+import { formatUSD } from "../utils/currency";
 
 const API_URL = API_BASE_URL;
 
@@ -202,16 +203,16 @@ const ProductDetail = () => {
     setCurrentImage((prev) => (prev === 0 ? images.length - 1 : prev - 1));
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-24 flex flex-col md:flex-row gap-12 bg-white text-gray-900 dark:bg-gray-900 dark:text-white transition">
+    <div className="max-w-5xl mx-auto px-6 py-24 flex flex-col md:flex-row gap-12 bg-white text-black">
       {/* LEFT SIDE - IMAGE SECTION */}
       <div className="md:w-1/2 w-full">
-        <div className="relative overflow-hidden rounded-2xl mb-4">
+        <div className="relative overflow-hidden border border-gray-300 mb-4">
           <AnimatePresence mode="wait">
             <motion.img
               key={currentImage}
               src={images[currentImage]}
               alt={product.title || "Product"}
-              className="w-full h-[420px] object-cover rounded-2xl"
+              className="w-full h-[420px] object-cover"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -223,13 +224,13 @@ const ProductDetail = () => {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full hover:bg-black transition"
+                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black text-white p-2 hover:bg-gray-800 transition"
               >
                 <ChevronLeft size={20} />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full hover:bg-black transition"
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black text-white p-2 hover:bg-gray-800 transition"
               >
                 <ChevronRight size={20} />
               </button>
@@ -251,8 +252,8 @@ const ProductDetail = () => {
                 src={img}
                 onClick={() => setCurrentImage(index)}
                 alt=""
-                className={`w-16 h-16 object-cover rounded-md cursor-pointer border-2 transition-transform duration-200 hover:scale-110 ${index === currentImage
-                  ? "border-black dark:border-white"
+                className={`w-16 h-16 object-cover cursor-pointer border-2 transition-transform duration-200 hover:scale-110 ${index === currentImage
+                  ? "border-black"
                   : "border-gray-300 opacity-70"
                   }`}
               />
@@ -260,95 +261,84 @@ const ProductDetail = () => {
           </div>
         )}
 
-      {product.description && (
-        <div className="mt-6">
-          <h3 className="text-lg font-bold mb-2">Product Description:</h3>
-          <p className="text-gray-700 dark:text-gray-300">{product.description}</p>
-        </div>
-      )}
+        {/* Product Description - Under Image */}
+        {product.description && (
+          <div className="mt-6 border-t border-gray-300 pt-6">
+            <h3 className="text-lg font-bold mb-3 uppercase tracking-wide">Product Description</h3>
+            <p className="text-gray-700 leading-relaxed">{product.description}</p>
+          </div>
+        )}
       </div>
 
       {/* RIGHT SIDE - DETAILS SECTION */}
       <div className="md:w-1/2 w-full">
-        <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
+        {/* 1. Product Title */}
+        <h1 className="text-4xl font-bold mb-6 tracking-wide" style={{ fontFamily: "'Playfair Display', serif" }}>
+          {product.title}
+        </h1>
 
-        {/* Price Display with Discount */}
-        <div className="mb-4">
+        {/* 2. Specifications - No heading, clean format */}
+        {product.attributes && Object.keys(product.attributes).length > 0 && (
+          <div className="mb-6 pb-6 border-b border-gray-300 space-y-3">
+            {Object.entries(product.attributes).map(([key, value]) => (
+              <div key={key}>
+                <p className="font-bold text-black capitalize mb-1">{key}</p>
+                <p className="text-gray-600">{value}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 3. Price Display with Discount */}
+        <div className="mb-6 pb-6 border-b border-gray-300">
           {hasDiscount ? (
-            <div className="flex items-center gap-3 flex-wrap">
-              <p className="text-2xl text-yellow-500 font-bold">
-                Rs. {finalPrice.toFixed(2)}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 flex-wrap">
+                <p className="text-3xl font-bold">
+                  {formatUSD(finalPrice)}
+                </p>
+                <p className="text-lg text-gray-500 line-through">
+                  {formatUSD(productPrice)}
+                </p>
+                <span className="bg-black text-white text-sm font-bold px-3 py-1 uppercase">
+                  {discountType === 'percentage' ? `${discountValue}% OFF` : `${formatUSD(discountValue)} OFF`}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">
+                You save {formatUSD(savings)}!
               </p>
-              <p className="text-lg text-gray-500 dark:text-gray-400 line-through">
-                Rs. {productPrice.toFixed(2)}
-              </p>
-              <span className="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded">
-                {discountType === 'percentage' ? `${discountValue}% OFF` : `Rs. ${discountValue} OFF`}
-              </span>
             </div>
           ) : (
-            <p className="text-2xl text-yellow-500 font-bold">
-              Rs. {productPrice.toFixed(2)}
-            </p>
-          )}
-          {hasDiscount && (
-            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-              You save Rs. {savings.toFixed(2)}!
+            <p className="text-3xl font-bold">
+              {formatUSD(productPrice)}
             </p>
           )}
         </div>
 
-        {product.category && (
-          <div className="mb-4">
-            <span className="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-semibold uppercase">
-              {product.category}
-            </span>
-          </div>
-        )}
-
-        <p className="mb-4">
-          <span className="font-semibold">Stock:</span>{" "}
-          <span className={product.stock > 5 ? "text-green-600" : "text-red-600"}>
-            {product.stock > 0 ? `${product.stock} available` : "Out of Stock"}
-          </span>
-        </p>
-
-        {/* Specifications */}
-        {product.attributes && Object.keys(product.attributes).length > 0 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-bold mb-2">Specifications:</h3>
-            <ul className="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
-              {Object.entries(product.attributes).map(([key, value]) => (
-                <li key={key}>
-                  <span className="font-semibold capitalize">{key}:</span> {value}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
+        {/* Login Warning */}
         {!user && product.stock > 0 && (
-          <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-600 rounded-lg">
-            <p className="text-sm text-yellow-800 dark:text-yellow-300 font-semibold text-center">
+          <div className="mb-4 p-3 bg-gray-100 border border-gray-300">
+            <p className="text-sm text-black font-semibold text-center">
               🔒 Login required to purchase this product
             </p>
           </div>
         )}
 
+        {/* 4. Quantity & Cart Buttons */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex items-center border border-gray-400 dark:border-gray-600 rounded-full">
+          <div className="flex items-center border border-gray-400">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               disabled={product.stock === 0}
-              className="px-3 py-1 text-lg disabled:opacity-50"
+              className="px-4 py-2 text-lg hover:bg-gray-100 disabled:opacity-50 transition"
             >
               −
             </button>
-            <span className="px-3">{quantity}</span>
+            <span className="px-4 py-2 font-semibold border-x border-gray-400">{quantity}</span>
             <button
               onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
               disabled={product.stock === 0}
-              className="px-3 py-1 text-lg disabled:opacity-50"
+              className="px-4 py-2 text-lg hover:bg-gray-100 disabled:opacity-50 transition"
             >
               +
             </button>
@@ -358,27 +348,28 @@ const ProductDetail = () => {
             whileTap={{ scale: 0.97 }}
             onClick={handleAddToCart}
             disabled={product.stock === 0}
-            className="flex-1 bg-black dark:bg-white text-white dark:text-black py-3 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 dark:hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-black text-white py-3 font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
           >
             🛒 ADD TO CART
           </motion.button>
 
           <button
             onClick={handleToggleWishlist}
-            className="border border-gray-400 dark:border-gray-600 rounded-full w-10 h-10 flex items-center justify-center text-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            className="border border-gray-400 w-12 h-12 flex items-center justify-center hover:bg-gray-100 transition"
           >
             <Heart
-              fill={inWishlist ? "red" : "none"}
+              fill={inWishlist ? "black" : "none"}
               strokeWidth={1.5}
-              className={inWishlist ? "text-red-500" : "text-gray-600 dark:text-gray-400"}
+              className={inWishlist ? "text-black" : "text-gray-600"}
             />
           </button>
         </div>
 
+        {/* Buy Now Button */}
         <button
           onClick={handleBuyNow}
           disabled={product.stock === 0}
-          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black py-3 rounded-full font-semibold mb-6 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-white border-2 border-black text-black py-3 font-semibold hover:bg-black hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
         >
           {user ? 'BUY IT NOW' : '🔒 LOGIN TO BUY NOW'}
         </button>
